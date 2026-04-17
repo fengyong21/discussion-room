@@ -99,12 +99,12 @@ function DiagnosisItem({ item, index }) {
 
   return (
     <div
-      className={`bg-gray-800/50 rounded-xl border ${config.border} p-5 transition-all hover:bg-gray-800/70`}
+      className={`bg-gray-800/50 rounded-xl border ${config.border} p-4 sm:p-5 transition-all hover:bg-gray-800/70`}
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-3 sm:gap-4">
         {/* 图标 */}
-        <div className={`w-10 h-10 rounded-lg ${config.iconBg} flex items-center justify-center flex-shrink-0`}>
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${config.iconBg} flex items-center justify-center flex-shrink-0`}>
           {item.level === 'excellent' && (
             <svg className={`w-5 h-5 ${config.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -129,21 +129,21 @@ function DiagnosisItem({ item, index }) {
 
         {/* 内容 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base font-semibold text-gray-200">{item.title}</h3>
-              <p className="text-sm text-gray-400 mt-1">{item.desc}</p>
-            </div>
-            {/* 评分 */}
-            <div className="text-right flex-shrink-0 ml-4">
-              <div className={`text-3xl font-bold ${getScoreColor(item.score)}`}>
-                {item.score}
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-200">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">{item.desc}</p>
               </div>
-              <div className={`text-xs mt-0.5 ${config.color}`}>
-                {config.label}
+              {/* 评分 */}
+              <div className="text-right flex-shrink-0">
+                <div className={`text-2xl sm:text-3xl font-bold ${getScoreColor(item.score)}`}>
+                  {item.score}
+                </div>
+                <div className={`text-[10px] sm:text-xs mt-0.5 ${config.color}`}>
+                  {config.label}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* 改进建议（可展开） */}
           <div className="mt-3">
@@ -207,12 +207,12 @@ function DiagnosisPage() {
       </div>
 
       {/* 顶部操作区 */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
         {/* 开始诊断按钮 */}
         <button
           onClick={handleDiagnosis}
           disabled={isDiagnosing}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+          className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
             isDiagnosing
               ? 'bg-emerald-600/50 text-emerald-300 cursor-wait'
               : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20'
@@ -236,13 +236,13 @@ function DiagnosisPage() {
           )}
         </button>
 
-        {/* 诊断类型选择 */}
-        <div className="flex items-center gap-1 bg-gray-800/50 rounded-lg p-1 border border-gray-700/50">
+        {/* 诊断类型选择 - 手机端横向滚动 */}
+        <div className="flex items-center gap-1 bg-gray-800/50 rounded-lg p-1 border border-gray-700/50 overflow-x-auto w-full sm:w-auto flex-shrink-0">
           {diagnosisTypes.map((type) => (
             <button
               key={type.key}
               onClick={() => setDiagnosisType(type.key)}
-              className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+              className={`px-3 py-1.5 rounded-md text-sm transition-all whitespace-nowrap flex-shrink-0 ${
                 diagnosisType === type.key
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
@@ -307,11 +307,11 @@ function DiagnosisPage() {
       {!isDiagnosing && diagnosisResult && (
         <div className="space-y-6">
           {/* 综合评分卡片 */}
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
-            <div className="flex items-center gap-6">
+          <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
               {/* 环形评分 */}
               <div className="flex-shrink-0">
-                <div className="relative w-32 h-32">
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32">
                   <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
                     <circle
                       cx="60"
