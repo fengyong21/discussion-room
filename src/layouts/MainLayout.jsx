@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 
 function MainLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -17,10 +18,19 @@ function MainLayout() {
     navigate('/login', { replace: true })
   }
 
+  const navItems = [
+    { to: '/', icon: '📊', label: '工作台', end: true },
+    { to: '/chat', icon: '🤖', label: 'AI对话' },
+    { to: '/content', icon: '📝', label: '内容' },
+    { to: '/diagnosis', icon: '🔍', label: '诊断' },
+    { to: '/ranking', icon: '🏆', label: '排行' },
+    { to: '/settings', icon: '⚙️', label: '设置' },
+  ]
+
   return (
     <div className="min-h-screen bg-[#0a0e1a] flex">
-      {/* 左侧导航栏 */}
-      <aside className="w-60 bg-[#0f1629] border-r border-[#1e293b] flex flex-col flex-shrink-0">
+      {/* 左侧导航栏 - 桌面端显示，手机端隐藏 */}
+      <aside className="hidden md:flex w-60 bg-[#0f1629] border-r border-[#1e293b] flex-col flex-shrink-0">
         {/* Logo */}
         <div className="px-4 py-5 border-b border-[#1e293b]">
           <div className="flex items-center gap-2.5">
@@ -70,11 +80,43 @@ function MainLayout() {
       </aside>
 
       {/* 右侧主内容 */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 lg:p-8">
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <div className="p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
       </main>
+
+      {/* 底部 Tab 导航栏 - 手机端显示，桌面端隐藏 */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f1629] border-t border-[#1e293b]">
+        <div className="flex items-center justify-around h-14 px-1">
+          {navItems.map((item) => {
+            const isActive = item.end
+              ? location.pathname === item.to
+              : location.pathname.startsWith(item.to)
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors"
+              >
+                <span className={`text-lg ${isActive ? 'scale-110' : ''} transition-transform`}>
+                  {item.icon}
+                </span>
+                <span
+                  className={`text-[10px] ${
+                    isActive ? 'text-emerald-400 font-medium' : 'text-gray-500'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </NavLink>
+            )
+          })}
+        </div>
+        {/* 安全区域适配（iPhone 底部横条） */}
+        <div className="h-[env(safe-area-inset-bottom)]" />
+      </nav>
     </div>
   )
 }
