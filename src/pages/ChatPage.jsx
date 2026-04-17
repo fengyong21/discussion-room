@@ -1,23 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { sendChatMessage } from '../api'
 
-function formatTime(date) {
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-}
-
 function ChatPage() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sessions, setSessions] = useState([
-    { id: '1', title: '门店搜索排名分析', time: '今天 10:30' },
-    { id: '2', title: '用户评价优化建议', time: '昨天 15:20' },
-    { id: '3', title: '内容发布策略讨论', time: '3天前' },
-  ])
-  const [activeSession, setActiveSession] = useState('1')
   const messagesEndRef = useRef(null)
-  const textareaRef = useRef(null)
+  const inputRef = useRef(null)
 
   // 初始化欢迎消息
   useEffect(() => {
@@ -25,7 +16,7 @@ function ChatPage() {
       {
         id: Date.now(),
         role: 'ai',
-        content: '你好！我是 GEO 智能助手，可以帮你分析门店的搜索排名、用户评价和内容优化等方面的问题。请问有什么可以帮你的？',
+        content: '你好！我是你的GEO优化助手。请告诉我你的店铺名称和所在城市，我来帮你做一次AI推荐诊断。',
         time: new Date(),
       },
     ])
@@ -35,14 +26,6 @@ function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
-
-  // 自动调整输入框高度
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 160) + 'px'
-    }
-  }, [inputValue])
 
   const handleSend = async () => {
     const text = inputValue.trim()
@@ -60,10 +43,8 @@ function ChatPage() {
     setIsLoading(true)
 
     try {
-      const res = await sendChatMessage({ message: text, session_id: activeSession })
-      // API 返回 { session_id, messages: [{role, content}] }
+      const res = await sendChatMessage({ message: text })
       if (res.messages && res.messages.length > 0) {
-        // 追加 API 返回的所有消息（跳过用户消息，只追加 AI 消息）
         const aiMessages = res.messages.filter((m) => m.role === 'ai')
         aiMessages.forEach((m) => {
           setMessages((prev) => [
@@ -76,10 +57,6 @@ function ChatPage() {
             },
           ])
         })
-      }
-      // 更新 session_id（如果服务端返回了新的）
-      if (res.session_id && res.session_id !== activeSession) {
-        setActiveSession(res.session_id)
       }
     } catch (error) {
       const errorMsg = error.response?.data?.detail || error.message || '网络错误，请稍后重试'
@@ -104,173 +81,140 @@ function ChatPage() {
     }
   }
 
-  const handleNewChat = () => {
-    const newSession = {
-      id: String(Date.now()),
-      title: '新对话',
-      time: '刚刚',
+  // 解析诊断结果
+  function parseDiagnosis(content) {
+    try {
+      const match = content.match(/\{[\s\S]*"score"[\s\S]*\}/)
+      if (match) {
+        return JSON.parse(match[0])
+      }
+    } catch (e) {
+      // ignore
     }
-    setSessions((prev) => [newSession, ...prev])
-    setActiveSession(newSession.id)
-    setMessages([
-      {
-        id: Date.now(),
-        role: 'ai',
-        content: '你好！我是 GEO 智能助手，可以帮你分析门店的搜索排名、用户评价和内容优化等方面的问题。请问有什么可以帮你的？',
-        time: new Date(),
-      },
-    ])
+    return null
+  }
+
+  function getScoreColor(score) {
+    if (score >= 80) return '#00C853'
+    if (score >= 60) return '#FFB800'
+    return '#FF4444'
+  }
+
+  function getScoreLevel(score) {
+    if (score >= 80) return 'T1级'
+    if (score >= 60) return 'T2级'
+    return 'T3级'
+  }
+
+  function getLevelColor(level) {
+    if (level === 'T1级') return '#00C853'
+    if (level === 'T2级') return '#FFB800'
+    return '#FF4444'
+  }
+
+  function DiagnosisCard({ data }) {
+    const score = data.score || 0
+    const level = getScoreLevel(score)
+    const scoreColor = getScoreColor(score)
+    const levelColor = getLevelColor(level)
+
+    return (
+      <div
+        className="mx-2 my-3 rounded-2xl p-5 relative overflow-hidden cursor-pointer"
+        style={{ backgroundColor: '#FFFFFF' }}
+        onClick={() => navigate('/diagnosis')}
+      >
+        {/* 红色丝带标签 */}
+        <div
+          className="absolute top-0 left-0 px-3 py-1 text-white text-xs font-bold rounded-br-lg"
+          style={{ backgroundColor: levelColor }}
+        >
+          {level}
+        </div>
+
+        <div className="mt-2">
+          {/* 标题 */}
+          <div className="text-gray-500 text-sm mb-1">推荐指数</div>
+
+          {/* 大数字 */}
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-5xl font-bold" style={{ color: scoreColor }}>
+              {score}
+            </span>
+            <span className="text-lg text-gray-400">分</span>
+          </div>
+
+          {/* 副标题 */}
+          <div className="text-gray-400 text-sm mb-2">
+            {score}/100 ({level})
+          </div>
+
+          {/* 状态 */}
+          {score < 80 && (
+            <div className="text-sm font-medium mb-3" style={{ color: scoreColor }}>
+              有{data.issues || 3}项需立即优化!
+            </div>
+          )}
+
+          {/* CTA 按钮 */}
+          <button
+            className="px-5 py-2.5 rounded-full text-white text-sm font-medium"
+            style={{ backgroundColor: '#2B7FFF' }}
+          >
+            查看完整报告 &rarr;
+          </button>
+        </div>
+
+        {/* 底部提示 */}
+        <div className="text-center text-gray-400 text-xs mt-3">
+          点击卡片查看详情
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)] -m-4 md:-m-6 lg:-m-8 bg-gray-950 text-gray-100 rounded-none md:rounded-xl overflow-hidden">
-      {/* 左侧对话历史 - 手机端隐藏，桌面端可切换 */}
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0A1628' }}>
+      {/* 顶部导航栏 */}
       <div
-        className={`${
-          sidebarOpen ? 'w-72' : 'w-0'
-        } hidden md:block transition-all duration-300 overflow-hidden flex-shrink-0 border-r border-gray-800 bg-gray-900`}
+        className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
+        style={{ backgroundColor: '#0A1628' }}
       >
-        <div className="w-72 h-full flex flex-col">
-          {/* 新建对话按钮 */}
-          <div className="p-4">
-            <button
-              onClick={handleNewChat}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新建对话
-            </button>
-          </div>
-
-          {/* 对话列表 */}
-          <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => setActiveSession(session.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group ${
-                  activeSession === session.id
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                }`}
-              >
-                <div className="text-sm font-medium truncate">{session.title}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{session.time}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 手机端侧边栏遮罩 */}
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/50"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* 手机端侧边栏滑出 */}
-      <div
-        className={`md:hidden fixed top-0 left-0 bottom-0 z-50 w-72 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-gray-800">
-            <span className="text-sm font-medium text-gray-200">对话历史</span>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div className="p-4">
-            <button
-              onClick={handleNewChat}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              新建对话
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => {
-                  setActiveSession(session.id)
-                  setSidebarOpen(false)
-                }}
-                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors group ${
-                  activeSession === session.id
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
-                }`}
-              >
-                <div className="text-sm font-medium truncate">{session.title}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{session.time}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 主对话区域 */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* 顶部栏 */}
-        <div className="flex items-center gap-3 px-3 sm:px-4 py-3 border-b border-gray-800 bg-gray-900/50">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-200"
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 flex items-center justify-center rounded-full"
+            style={{ backgroundColor: '#1A2540' }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-              </svg>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-200">GEO 智能助手</div>
-              <div className="text-[10px] sm:text-xs text-gray-500">在线</div>
-            </div>
+          <div>
+            <div className="text-white text-lg font-bold leading-tight">AI 对话</div>
+            <div className="text-xs leading-tight" style={{ color: '#8E9BB5' }}>GEO智能助手</div>
           </div>
         </div>
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: '#1A2540' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
+      </div>
 
-        {/* 消息列表 */}
-        <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {msg.role === 'ai' && (
-                <div className="flex-shrink-0 mr-2 sm:mr-3 mt-1">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-                    </svg>
-                  </div>
-                </div>
-              )}
-              <div className={`max-w-[80%] sm:max-w-[70%] ${msg.role === 'user' ? 'order-1' : ''}`}>
+      {/* 消息区域 */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {messages.map((msg) => (
+          <div key={msg.id}>
+            {/* AI 消息 */}
+            {msg.role === 'ai' && (
+              <div className="flex justify-start mb-1">
                 <div
-                  className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-br-md'
-                      : 'bg-gray-800 text-gray-200 rounded-bl-md'
-                  }`}
+                  className="max-w-[85%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed"
+                  style={{ backgroundColor: '#1A2540', color: '#FFFFFF' }}
                 >
                   {msg.content.split('\n').map((line, i) => (
                     <span key={i}>
@@ -279,74 +223,101 @@ function ChatPage() {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* 用户消息 */}
+            {msg.role === 'user' && (
+              <div className="flex justify-end mb-1">
                 <div
-                  className={`text-[10px] sm:text-xs text-gray-500 mt-1 ${
-                    msg.role === 'user' ? 'text-right' : 'text-left'
-                  }`}
+                  className="max-w-[85%] px-4 py-3 rounded-2xl rounded-br-md text-sm leading-relaxed text-white"
+                  style={{ backgroundColor: '#2B7FFF' }}
                 >
-                  {formatTime(msg.time)}
+                  {msg.content.split('\n').map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < msg.content.split('\n').length - 1 && <br />}
+                    </span>
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
+            )}
 
-          {/* 加载动画 */}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex-shrink-0 mr-2 sm:mr-3 mt-1">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-                  </svg>
-                </div>
+            {/* 诊断结果卡片 */}
+            {msg.role === 'ai' && parseDiagnosis(msg.content) && (
+              <DiagnosisCard data={parseDiagnosis(msg.content)} />
+            )}
+
+            {/* 来源标注 */}
+            {msg.role === 'ai' && (
+              <div className="text-xs mt-1 ml-1" style={{ color: '#8E9BB5' }}>
+                豆包搜索检索
               </div>
-              <div className="bg-gray-800 text-gray-400 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl rounded-bl-md">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs sm:text-sm">AI 正在思考</span>
-                  <span className="flex gap-0.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </span>
-                </div>
+            )}
+          </div>
+        ))}
+
+        {/* 加载动画 */}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div
+              className="px-4 py-3 rounded-2xl rounded-bl-md"
+              style={{ backgroundColor: '#1A2540' }}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm" style={{ color: '#8E9BB5' }}>AI 正在思考</span>
+                <span className="flex gap-0.5">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full animate-bounce"
+                    style={{ backgroundColor: '#2B7FFF', animationDelay: '0ms' }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full animate-bounce"
+                    style={{ backgroundColor: '#2B7FFF', animationDelay: '150ms' }}
+                  />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full animate-bounce"
+                    style={{ backgroundColor: '#2B7FFF', animationDelay: '300ms' }}
+                  />
+                </span>
               </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* 输入区域 */}
-        <div className="border-t border-gray-800 bg-gray-900/50 px-3 sm:px-4 py-3 sm:py-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-end gap-2 sm:gap-3 bg-gray-800 rounded-2xl border border-gray-700 focus-within:border-emerald-500 transition-colors px-3 sm:px-4 py-2.5 sm:py-3">
-              <textarea
-                ref={textareaRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="输入你的问题，AI 帮你分析..."
-                rows={1}
-                className="flex-1 bg-transparent text-gray-200 placeholder-gray-500 text-sm resize-none outline-none max-h-40"
-              />
-              <button
-                onClick={handleSend}
-                disabled={!inputValue.trim() || isLoading}
-                className={`flex-shrink-0 p-2 rounded-xl transition-colors ${
-                  inputValue.trim() && !isLoading
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
-              </button>
-            </div>
-            <div className="text-center mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-gray-600">
-              按 Enter 发送，Shift + Enter 换行
             </div>
           </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* 底部输入区域 */}
+      <div
+        className="sticky bottom-0 px-4 py-3"
+        style={{ backgroundColor: '#0A1628', borderTop: '1px solid #1A2540' }}
+      >
+        <div className="flex items-center gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="输入你的问题..."
+            className="flex-1 px-4 py-3 rounded-full text-sm text-white placeholder-gray-500 outline-none"
+            style={{ backgroundColor: '#1A2540' }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || isLoading}
+            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-opacity"
+            style={{
+              backgroundColor: inputValue.trim() && !isLoading ? '#2B7FFF' : '#1A2540',
+              opacity: inputValue.trim() && !isLoading ? 1 : 0.5,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
