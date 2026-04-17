@@ -157,7 +157,7 @@ function LoginPage() {
       </div>
 
       {/* 右侧登录表单 */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-8 py-12">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-5 py-8 sm:px-8 sm:py-12">
         <div className="w-full max-w-md">
           {/* 移动端 Logo */}
           <div className="lg:hidden flex justify-center mb-8">
