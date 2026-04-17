@@ -1,6 +1,58 @@
 import { useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 
+// 优化 Tab - House 图标
+function HouseIcon({ active }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF4444' : '#8E9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
+      <path d="M9 21V12h6v9" />
+    </svg>
+  )
+}
+
+// 巨擘 Tab - Building 图标
+function BuildingIcon({ active }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF4444' : '#8E9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      <path d="M9 22V18h6v4" />
+      <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01" />
+    </svg>
+  )
+}
+
+// 匠心 Tab - Factory 图标
+function FactoryIcon({ active }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF4444' : '#8E9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 20V8l5 4V8l5 4V4h8a1 1 0 011 1v15H2z" />
+      <path d="M17 20v-4h-4v4" />
+      <path d="M12 20v-4H8v4" />
+      <path d="M7 20v-4H3v4" />
+    </svg>
+  )
+}
+
+// 甄选 Tab - Bowl 图标
+function BowlIcon({ active }) {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#FF4444' : '#8E9BB5'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h18c0 4.97-4.03 9-9 9s-9-4.03-9-9z" />
+      <path d="M12 3v3" />
+      <path d="M8 5l1 2" />
+      <path d="M16 5l-1 2" />
+    </svg>
+  )
+}
+
+const tabItems = [
+  { to: '/', label: '优化', icon: HouseIcon, end: true },
+  { to: '/diagnosis', label: '巨擘', icon: BuildingIcon },
+  { to: '/content', label: '匠心', icon: FactoryIcon },
+  { to: '/ranking', label: '甄选', icon: BowlIcon },
+]
+
 function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -12,101 +64,37 @@ function MainLayout() {
     }
   }, [navigate])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('merchant')
-    navigate('/login', { replace: true })
-  }
-
-  const navItems = [
-    { to: '/', icon: '📊', label: '工作台', end: true },
-    { to: '/chat', icon: '🤖', label: 'AI对话' },
-    { to: '/content', icon: '📝', label: '内容' },
-    { to: '/diagnosis', icon: '🔍', label: '诊断' },
-    { to: '/ranking', icon: '🏆', label: '排行' },
-    { to: '/settings', icon: '⚙️', label: '设置' },
-  ]
-
   return (
-    <div className="min-h-screen bg-[#0a0e1a] flex">
-      {/* 左侧导航栏 - 桌面端显示，手机端隐藏 */}
-      <aside className="hidden md:flex w-60 bg-[#0f1629] border-r border-[#1e293b] flex-col flex-shrink-0">
-        {/* Logo */}
-        <div className="px-4 py-5 border-b border-[#1e293b]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center text-white font-black text-lg">
-              G
-            </div>
-            <div>
-              <div className="text-sm font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-                GEO 智能助手
-              </div>
-              <div className="text-[10px] text-gray-600">商家管理后台 v1.0</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 导航菜单 */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <div className="text-[11px] text-gray-600 uppercase tracking-wider px-3 mb-2">核心功能</div>
-          <NavItem to="/" icon="📊" label="工作台" end />
-          <NavItem to="/chat" icon="🤖" label="AI 对话" />
-          <NavItem to="/content" icon="📝" label="内容生成" />
-          <NavItem to="/diagnosis" icon="🔍" label="门店诊断" />
-          <NavItem to="/ranking" icon="🏆" label="竞品排行" />
-
-          <div className="text-[11px] text-gray-600 uppercase tracking-wider px-3 mb-2 mt-6">设置</div>
-          <NavItem to="/settings" icon="⚙️" label="门店信息" />
-        </nav>
-
-        {/* 底部商家信息 */}
-        <div className="px-3 py-4 border-t border-[#1e293b]">
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-sm font-bold">
-              张
-            </div>
-            <div>
-              <div className="text-xs font-medium text-gray-300">张小面·手工鲜面</div>
-              <div className="text-[10px] text-gray-600">专业版</div>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full text-left px-3 py-2 text-xs text-gray-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-colors"
-          >
-            退出登录
-          </button>
-        </div>
-      </aside>
-
-      {/* 右侧主内容 */}
-      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
-        <div className="p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen" style={{ backgroundColor: '#0A1628' }}>
+      {/* 主内容区域 */}
+      <main className="pb-[56px]">
+        <div className="mx-auto max-w-[480px] min-h-screen">
           <Outlet />
         </div>
       </main>
 
-      {/* 底部 Tab 导航栏 - 手机端显示，桌面端隐藏 */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0f1629] border-t border-[#1e293b]">
-        <div className="flex items-center justify-around h-14 px-1">
-          {navItems.map((item) => {
+      {/* 底部 Tab 导航栏 */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50"
+        style={{ backgroundColor: '#0A1628', borderTop: '1px solid #1A2540' }}
+      >
+        <div className="flex items-center justify-around h-[56px] mx-auto max-w-[480px]">
+          {tabItems.map((item) => {
             const isActive = item.end
               ? location.pathname === item.to
               : location.pathname.startsWith(item.to)
+            const IconComponent = item.icon
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
-                className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-colors"
+                className="flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-colors"
               >
-                <span className={`text-lg ${isActive ? 'scale-110' : ''} transition-transform`}>
-                  {item.icon}
-                </span>
+                <IconComponent active={isActive} />
                 <span
-                  className={`text-[10px] ${
-                    isActive ? 'text-emerald-400 font-medium' : 'text-gray-500'
-                  }`}
+                  className="text-[11px] font-medium"
+                  style={{ color: isActive ? '#FF4444' : '#8E9BB5' }}
                 >
                   {item.label}
                 </span>
@@ -118,25 +106,6 @@ function MainLayout() {
         <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </div>
-  )
-}
-
-function NavItem({ to, icon, label, end }) {
-  return (
-    <NavLink
-      to={to}
-      end={end}
-      className={({ isActive }) =>
-        `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${
-          isActive
-            ? 'bg-emerald-500/10 text-emerald-400 font-medium'
-            : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]'
-        }`
-      }
-    >
-      <span className="text-base">{icon}</span>
-      {label}
-    </NavLink>
   )
 }
 
