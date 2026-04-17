@@ -1,13 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-
-// 模拟 AI 回复数据
-const mockAIReplies = [
-  '根据我的分析，您的门店在百度地图的搜索排名表现不错，建议继续保持关键词优化策略。',
-  '我注意到您门店的用户评价分数有所下降，建议关注近期差评并及时回复，同时可以推出一些活动引导顾客留下好评。',
-  '关于内容优化，建议您每周至少发布2-3条短视频内容，展示门店特色菜品和用餐环境，这有助于提升在平台上的曝光率。',
-  '综合来看，您的门店信息完整度还有提升空间。建议补充营业时间、停车位、Wi-Fi 等信息，这些细节会影响用户的到店决策。',
-  '您的搜索排名在上个月有显著提升，特别是在"附近面馆"这个关键词上。建议继续优化图片质量和描述文案。',
-]
+import { sendChatMessage } from '../api'
 
 function formatTime(date) {
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -67,18 +59,42 @@ function ChatPage() {
     setInputValue('')
     setIsLoading(true)
 
-    // 模拟 API 调用延迟
-    setTimeout(() => {
-      const aiReply = mockAIReplies[Math.floor(Math.random() * mockAIReplies.length)]
-      const aiMessage = {
-        id: Date.now() + 1,
-        role: 'ai',
-        content: aiReply,
-        time: new Date(),
+    try {
+      const res = await sendChatMessage({ message: text, session_id: activeSession })
+      // API 返回 { session_id, messages: [{role, content}] }
+      if (res.messages && res.messages.length > 0) {
+        // 追加 API 返回的所有消息（跳过用户消息，只追加 AI 消息）
+        const aiMessages = res.messages.filter((m) => m.role === 'ai')
+        aiMessages.forEach((m) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now() + Math.random(),
+              role: 'ai',
+              content: m.content,
+              time: new Date(),
+            },
+          ])
+        })
       }
-      setMessages((prev) => [...prev, aiMessage])
+      // 更新 session_id（如果服务端返回了新的）
+      if (res.session_id && res.session_id !== activeSession) {
+        setActiveSession(res.session_id)
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || error.message || '网络错误，请稍后重试'
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: 'ai',
+          content: `抱歉，发生了错误：${errorMsg}`,
+          time: new Date(),
+        },
+      ])
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const handleKeyDown = (e) => {
