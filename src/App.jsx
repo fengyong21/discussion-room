@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
+import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import ChatPage from './pages/ChatPage'
 import DiagnosisPage from './pages/DiagnosisPage'
@@ -12,6 +13,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="chat" element={<ChatPage />} />
