@@ -1,55 +1,5 @@
-import { useState } from 'react'
-
-const rankingData = [
-  {
-    rank: 1,
-    name: '陈记老北京炸酱面',
-    rating: 4.8,
-    geoScore: 95,
-    trend: 3,
-    isMine: false
-  },
-  {
-    rank: 2,
-    name: '老陕面庄',
-    rating: 4.7,
-    geoScore: 91,
-    trend: 1,
-    isMine: false
-  },
-  {
-    rank: 3,
-    name: '张小面·手工鲜面',
-    rating: 4.6,
-    geoScore: 87,
-    trend: 5,
-    isMine: true
-  },
-  {
-    rank: 4,
-    name: '兰州正宗牛肉拉面',
-    rating: 4.5,
-    geoScore: 82,
-    trend: -2,
-    isMine: false
-  },
-  {
-    rank: 5,
-    name: '川味面馆',
-    rating: 4.3,
-    geoScore: 76,
-    trend: 0,
-    isMine: false
-  },
-  {
-    rank: 6,
-    name: '面对面私房面',
-    rating: 4.2,
-    geoScore: 71,
-    trend: 1,
-    isMine: false
-  }
-]
+import { useState, useEffect } from 'react'
+import { getRankingList } from '../api'
 
 function getRankBadge(rank) {
   if (rank === 1) {
@@ -165,12 +115,42 @@ function RankingPage() {
   const [industry, setIndustry] = useState('面馆')
   const [radius, setRadius] = useState('3km')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [rankingData, setRankingData] = useState([])
+  const [myRank, setMyRank] = useState(null)
+  const [myScore, setMyScore] = useState(null)
+  const [error, setError] = useState(null)
+
+  const fetchRanking = async () => {
+    setIsRefreshing(true)
+    setError(null)
+    try {
+      const res = await getRankingList('nearby')
+      // API 返回 { ranking: [{rank, name, platform_score, geo_score, trend}], my_rank, my_score }
+      const ranking = (res.ranking || []).map((item) => ({
+        rank: item.rank,
+        name: item.name,
+        rating: item.platform_score ? (item.platform_score / 20).toFixed(1) : 0,
+        geoScore: item.geo_score || 0,
+        trend: item.trend || 0,
+        isMine: item.rank === res.my_rank,
+      }))
+      setRankingData(ranking)
+      setMyRank(res.my_rank)
+      setMyScore(res.my_score)
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || err.message || '获取排行数据失败'
+      setError(errorMsg)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchRanking()
+  }, [])
 
   const handleRefresh = () => {
-    setIsRefreshing(true)
-    setTimeout(() => {
-      setIsRefreshing(false)
-    }, 1500)
+    fetchRanking()
   }
 
   return (
@@ -245,6 +225,48 @@ function RankingPage() {
           </button>
         </div>
       </div>
+
+      {/* 加载状态 */}
+      {isRefreshing && rankingData.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative w-16 h-16 mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
+            <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+          </div>
+          <p className="text-gray-400 text-sm">正在加载排行数据...</p>
+        </div>
+      )}
+
+      {/* 错误提示 */}
+      {!isRefreshing && error && rankingData.length === 0 && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 sm:p-6 text-center">
+          <div className="flex items-center justify-center gap-2 text-red-400 mb-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium">加载失败</span>
+          </div>
+          <p className="text-sm text-red-300">{error}</p>
+          <button
+            onClick={fetchRanking}
+            className="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm rounded-lg transition-colors border border-red-500/30"
+          >
+            重新加载
+          </button>
+        </div>
+      )}
+
+      {/* 空状态 */}
+      {!isRefreshing && !error && rankingData.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-24 h-24 rounded-full bg-gray-800/50 flex items-center justify-center mb-6">
+            <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 text-base">暂无排行数据</p>
+        </div>
+      )}
 
       {/* 排行表格 - 桌面端显示 */}
       <div className="hidden sm:block bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
