@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE = 'http://zoxdjxhqqjmc.sealosbja.site'
+
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE + '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
