@@ -94,15 +94,41 @@ function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-100">设置</h2>
-        <p className="mt-1 text-gray-500">管理您的账号和商家信息。</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-100">设置</h2>
+        <p className="mt-1 text-xs sm:text-sm text-gray-500">管理您的账号和商家信息。</p>
+      </div>
+
+      {/* 手机端顶部 Tab 切换 */}
+      <div className="md:hidden flex gap-1 bg-gray-800/50 rounded-lg p-1 border border-gray-700/50">
+        {menuItems.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => setActiveTab(item.key)}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium rounded-md transition-colors ${
+              activeTab === item.key
+                ? 'bg-emerald-600/20 text-emerald-400'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <svg
+              className="w-4 h-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+            </svg>
+            {item.label}
+          </button>
+        ))}
       </div>
 
       <div className="flex gap-6">
-        {/* 左侧导航菜单 */}
-        <aside className="w-56 shrink-0">
+        {/* 左侧导航菜单 - 桌面端显示，手机端隐藏 */}
+        <aside className="hidden md:block w-56 shrink-0">
           <nav className="space-y-1">
             {menuItems.map((item) => (
               <button
@@ -133,10 +159,10 @@ function SettingsPage() {
         <div className="flex-1 min-w-0">
           {/* ========== 门店信息 ========== */}
           {activeTab === 'shop' && (
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-gray-100">门店信息</h3>
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6 space-y-5 sm:space-y-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-100">门店信息</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {/* 门店名称 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1.5">
@@ -252,7 +278,7 @@ function SettingsPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={handleSaveProfile}
-                  className="px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
                 >
                   保存修改
                 </button>
@@ -267,12 +293,12 @@ function SettingsPage() {
 
           {/* ========== 账号安全 ========== */}
           {activeTab === 'security' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* 修改密码 */}
-              <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-5">
-                <h3 className="text-lg font-semibold text-gray-100">修改密码</h3>
+              <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6 space-y-4 sm:space-y-5">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-100">修改密码</h3>
 
-                <div className="space-y-4 max-w-md">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1.5">
                       当前密码
@@ -311,10 +337,10 @@ function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                   <button
                     onClick={handleChangePassword}
-                    className="px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
                   >
                     修改密码
                   </button>
@@ -331,11 +357,11 @@ function SettingsPage() {
               </div>
 
               {/* 管理员密钥 */}
-              <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-4">
-                <h3 className="text-lg font-semibold text-gray-100">管理员密钥</h3>
-                <div className="flex items-center gap-3">
+              <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6 space-y-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-100">管理员密钥</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium w-fit ${
                       true
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
@@ -358,13 +384,13 @@ function SettingsPage() {
 
           {/* ========== 通知设置 ========== */}
           {activeTab === 'notification' && (
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-6">
-              <h3 className="text-lg font-semibold text-gray-100">通知设置</h3>
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6 space-y-5 sm:space-y-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-100">通知设置</h3>
 
               <div className="space-y-5">
                 {/* 诊断完成通知 */}
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-200">诊断完成通知</p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       门店诊断任务完成后推送通知
@@ -379,8 +405,8 @@ function SettingsPage() {
                 <div className="border-t border-gray-800" />
 
                 {/* 内容生成完成通知 */}
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-200">内容生成完成通知</p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       AI 内容生成任务完成后推送通知
@@ -395,8 +421,8 @@ function SettingsPage() {
                 <div className="border-t border-gray-800" />
 
                 {/* 竞品排名变动通知 */}
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-200">竞品排名变动通知</p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       竞品排名发生显著变动时推送通知
