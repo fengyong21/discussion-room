@@ -23,4 +23,4 @@ export const runDiagnosis = (data) => request.post('/diagnosis/run', data)
 export const getDiagnosisHistory = (params) => request.get('/diagnosis/history', { params })
 
 // 竞品排行
-export const getRankingList = (params) => request.get('/ranking/list', { params })
+export const getRankingList = (rankType) => request.get(`/rankings/list/${rankType}`)
