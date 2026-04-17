@@ -1,23 +1,11 @@
 import { useState } from 'react'
+import { generateContent } from '../api'
 
-const mockResults = {
-  xiaohongshu: `🍜 藏在朝阳区的神仙面馆！张小面·手工鲜面
-
-姐妹们！！这家面馆我真的回购了无数次...
-
-📍 地址：北京市朝阳区xxx路xx号
-💰 人均：25元
-⏰ 推荐：招牌牛肉面、酸辣粉
-
-#北京美食 #面馆推荐 #朝阳美食 #手工面`,
-  video: `【分镜1 - 开场 0-3秒】
-特写：一碗热气腾腾的手工面，筷子挑起面条
-旁白："这碗面，我愿意排队一小时"
-
-【分镜2 - 制作过程 3-10秒】
-镜头：师傅手工揉面、拉面的过程
-旁白："每天现做，每一根都是功夫"`,
-  review: `感谢您的五星好评！🎉 很高兴您喜欢我们的手工鲜面。我们坚持每天现做，用心做好每一碗面。期待您下次光临，记得试试我们的新菜品哦～`
+// 将前端 content_type id 映射为 API content_type
+const contentTypeMap = {
+  xiaohongshu: 'purchase_guide',
+  video: 'purchase_guide',
+  review: 'faq',
 }
 
 const contentTypes = [
@@ -52,6 +40,7 @@ function ContentPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedResult, setGeneratedResult] = useState('')
   const [history, setHistory] = useState([])
+  const [error, setError] = useState(null)
 
   // 小红书表单状态
   const [xiaohongshuInput, setXiaohongshuInput] = useState('')
@@ -64,42 +53,67 @@ function ContentPage() {
   // 评价回复表单状态
   const [reviewScene, setReviewScene] = useState('good')
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!selectedType) return
     setIsGenerating(true)
     setGeneratedResult('')
+    setError(null)
 
-    setTimeout(() => {
-      const result = mockResults[selectedType]
+    try {
+      // 获取 merchant_id
+      const merchantStr = localStorage.getItem('merchant')
+      let merchant_id = ''
+      if (merchantStr) {
+        try {
+          const merchant = JSON.parse(merchantStr)
+          merchant_id = merchant.id || merchant.merchant_id || ''
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      // 确定主题
+      let topic = ''
+      if (selectedType === 'xiaohongshu') {
+        topic = xiaohongshuInput || '门店种草文案'
+      } else if (selectedType === 'video') {
+        topic = videoTopic || '短视频脚本'
+      } else {
+        topic = reviewScene === 'good' ? '好评感谢回复' : reviewScene === 'bad' ? '差评安抚回复' : '中性评价回复'
+      }
+
+      const res = await generateContent({
+        merchant_id,
+        content_type: contentTypeMap[selectedType] || 'purchase_guide',
+        topic,
+      })
+
+      // API 返回 { id, title, content, content_type, geo_score, created_at }
+      const result = res.content || res.title || '内容生成完成'
       setGeneratedResult(result)
-      setIsGenerating(false)
 
       const typeLabels = {
         xiaohongshu: '小红书种草文案',
         video: '短视频脚本',
-        review: '评价回复模板'
+        review: '评价回复模板',
       }
 
       const newHistoryItem = {
-        id: Date.now(),
+        id: res.id || Date.now(),
         type: typeLabels[selectedType],
         typeId: selectedType,
-        title:
-          selectedType === 'xiaohongshu'
-            ? xiaohongshuInput || '门店种草文案'
-            : selectedType === 'video'
-            ? videoTopic || '短视频脚本'
-            : reviewScene === 'good'
-            ? '好评感谢回复'
-            : reviewScene === 'bad'
-            ? '差评安抚回复'
-            : '中性评价回复',
+        title: res.title || topic,
         time: new Date().toLocaleString('zh-CN'),
-        content: result
+        content: result,
       }
 
       setHistory((prev) => [newHistoryItem, ...prev])
-    }, 2000)
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || err.message || '内容生成失败，请稍后重试'
+      setError(errorMsg)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleCopy = () => {
@@ -415,6 +429,19 @@ function ContentPage() {
               重新生成
             </button>
           </div>
+        </div>
+      )}
+
+      {/* 错误提示 */}
+      {error && !isGenerating && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 sm:p-6 text-center">
+          <div className="flex items-center justify-center gap-2 text-red-400 mb-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium">生成失败</span>
+          </div>
+          <p className="text-sm text-red-300">{error}</p>
         </div>
       )}
 
