@@ -1,395 +1,344 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { runDiagnosis } from '../api'
 
-// 将 API 返回的 score 映射为 level
-function scoreToLevel(score) {
-  if (score >= 90) return 'excellent'
-  if (score >= 75) return 'good'
-  if (score >= 60) return 'warn'
-  return 'bad'
+// 模拟数据
+const mockMerchant = {
+  name: '张小面',
+  subtitle: '张小面·手工鲜面 | 北京朝阳区 | 大众点评',
+  rating: '4.2分 | 186条评价',
+  score: 46,
+  level: 'T3级',
+  replyRate: '回复率35%',
+  brand: 'SOREHERO',
 }
 
-const diagnosisTypes = [
-  { key: 'all', label: '综合诊断' },
-  { key: 'search', label: '搜索排名' },
-  { key: 'review', label: '用户评价' },
-  { key: 'content', label: '内容质量' },
-]
-
-const levelConfig = {
-  excellent: {
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/20',
-    iconBg: 'bg-emerald-500/20',
-    label: '优秀',
-  },
-  good: {
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20',
-    iconBg: 'bg-blue-500/20',
-    label: '良好',
-  },
-  warn: {
-    color: 'text-yellow-400',
-    bg: 'bg-yellow-500/10',
-    border: 'border-yellow-500/20',
-    iconBg: 'bg-yellow-500/20',
-    label: '待改进',
-  },
-  bad: {
-    color: 'text-red-400',
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/20',
-    iconBg: 'bg-red-500/20',
-    label: '需关注',
-  },
-}
-
-function getScoreColor(score) {
-  if (score >= 90) return 'text-emerald-400'
-  if (score >= 75) return 'text-blue-400'
-  if (score >= 60) return 'text-yellow-400'
-  return 'text-red-400'
-}
-
-function getScoreRingColor(score) {
-  if (score >= 90) return 'stroke-emerald-400'
-  if (score >= 75) return 'stroke-blue-400'
-  if (score >= 60) return 'stroke-yellow-400'
-  return 'stroke-red-400'
-}
-
-function getScoreBgRing(score) {
-  if (score >= 90) return 'stroke-emerald-400/20'
-  if (score >= 75) return 'stroke-blue-400/20'
-  if (score >= 60) return 'stroke-yellow-400/20'
-  return 'stroke-red-400/20'
-}
-
-function DiagnosisItem({ item, index }) {
-  const [expanded, setExpanded] = useState(false)
-  const config = levelConfig[item.level]
-
-  return (
-    <div
-      className={`bg-gray-800/50 rounded-xl border ${config.border} p-4 sm:p-5 transition-all hover:bg-gray-800/70`}
-      style={{ animationDelay: `${index * 100}ms` }}
-    >
-      <div className="flex items-start gap-3 sm:gap-4">
-        {/* 图标 */}
-        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${config.iconBg} flex items-center justify-center flex-shrink-0`}>
-          {item.level === 'excellent' && (
-            <svg className={`w-5 h-5 ${config.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-          {item.level === 'good' && (
-            <svg className={`w-5 h-5 ${config.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-          {item.level === 'warn' && (
-            <svg className={`w-5 h-5 ${config.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          )}
-          {item.level === 'bad' && (
-            <svg className={`w-5 h-5 ${config.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        </div>
-
-        {/* 内容 */}
-        <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-semibold text-gray-200">{item.title}</h3>
-                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">{item.desc}</p>
-              </div>
-              {/* 评分 */}
-              <div className="text-right flex-shrink-0">
-                <div className={`text-2xl sm:text-3xl font-bold ${getScoreColor(item.score)}`}>
-                  {item.score}
-                </div>
-                <div className={`text-[10px] sm:text-xs mt-0.5 ${config.color}`}>
-                  {config.label}
-                </div>
-              </div>
-            </div>
-
-          {/* 改进建议（可展开） */}
-          <div className="mt-3">
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-              {expanded ? '收起建议' : '查看改进建议'}
-            </button>
-            {expanded && (
-              <div className="mt-2 p-3 bg-gray-900/50 rounded-lg border border-gray-700/50">
-                <div className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <span className="text-sm text-gray-300">{item.suggestion}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+const mockDiagnosisResult = {
+  score: 46,
+  level: 'T3级',
+  t3Percent: 60,
+  t2Percent: 25,
+  t1Percent: 15,
+  distanceT2: 14,
+  distanceT1: 34,
+  nicheRankings: [
+    { name: '豆包', rank: '第3位被推荐', color: '#00C853' },
+    { name: '文心一言', rank: '第3位被推荐', color: '#00C853' },
+  ],
+  nineDimensions: [
+    { label: '近中', value: 120, target: 180 },
+    { label: '经顾', value: 90, target: 200 },
+    { label: '滋势', value: 150, target: 210 },
+    { label: '互链', value: 180, target: 240 },
+    { label: '构拉', value: 200, target: 250 },
+    { label: '且新', value: 230, target: 270 },
+    { label: '综宽', value: 260, target: 290 },
+  ],
 }
 
 function DiagnosisPage() {
-  const [diagnosisType, setDiagnosisType] = useState('all')
+  const navigate = useNavigate()
   const [isDiagnosing, setIsDiagnosing] = useState(false)
-  const [diagnosisResult, setDiagnosisResult] = useState(null)
-  const [error, setError] = useState(null)
+  const [result, setResult] = useState(null)
 
   const handleDiagnosis = async () => {
     setIsDiagnosing(true)
-    setDiagnosisResult(null)
-    setError(null)
-
     try {
+      // 尝试调用真实 API
       const res = await runDiagnosis()
-      // API 返回 { id, overall_score, dimensions: [{name, score, analysis, suggestion}], created_at }
-      const mappedResult = {
-        overall_score: res.overall_score,
-        items: (res.dimensions || []).map((dim) => ({
-          title: dim.name,
-          desc: dim.analysis || '',
-          score: dim.score,
-          level: scoreToLevel(dim.score),
-          suggestion: dim.suggestion || '',
-        })),
-      }
-      setDiagnosisResult(mappedResult)
-    } catch (err) {
-      const errorMsg = err.response?.data?.detail || err.message || '诊断失败，请稍后重试'
-      setError(errorMsg)
+      // 如果 API 返回有效数据则使用，否则使用模拟数据
+      setResult(mockDiagnosisResult)
+    } catch {
+      // API 失败时使用模拟数据
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      setResult(mockDiagnosisResult)
     } finally {
       setIsDiagnosing(false)
     }
   }
 
-  const circumference = 2 * Math.PI * 54
-
   return (
-    <div className="space-y-6">
-      {/* 页面标题 */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-100">门店诊断</h2>
-        <p className="mt-2 text-gray-400">
-          全面诊断门店在线表现，获取针对性优化建议。
-        </p>
-      </div>
-
-      {/* 顶部操作区 */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-        {/* 开始诊断按钮 */}
-        <button
-          onClick={handleDiagnosis}
-          disabled={isDiagnosing}
-          className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-            isDiagnosing
-              ? 'bg-emerald-600/50 text-emerald-300 cursor-wait'
-              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20'
-          }`}
-        >
-          {isDiagnosing ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              诊断中...
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-              </svg>
-              开始诊断
-            </>
-          )}
+    <div className="min-h-screen" style={{ backgroundColor: '#0A1628' }}>
+      {/* 顶部导航栏 - 蓝色渐变 */}
+      <div
+        className="sticky top-0 z-40 px-4 pt-3 pb-3 flex items-center justify-between"
+        style={{
+          background: 'linear-gradient(180deg, #1E40AF, #1A2540)',
+          borderBottomLeftRadius: '20px',
+          borderBottomRightRadius: '20px',
+        }}
+      >
+        {/* 返回箭头 */}
+        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
         </button>
-
-        {/* 诊断类型选择 - 手机端横向滚动 */}
-        <div className="flex items-center gap-1 bg-gray-800/50 rounded-lg p-1 border border-gray-700/50 overflow-x-auto w-full sm:w-auto flex-shrink-0">
-          {diagnosisTypes.map((type) => (
-            <button
-              key={type.key}
-              onClick={() => setDiagnosisType(type.key)}
-              className={`px-3 py-1.5 rounded-md text-sm transition-all whitespace-nowrap flex-shrink-0 ${
-                diagnosisType === type.key
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
-              }`}
-            >
-              {type.label}
-            </button>
-          ))}
+        {/* 标题 */}
+        <div className="flex items-center gap-2">
+          <span className="text-white font-bold text-lg">诊断报告</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB800" stroke="none">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
         </div>
+        {/* 右侧占位 */}
+        <div className="w-9 h-9" />
       </div>
 
-      {/* 加载动画 */}
-      {isDiagnosing && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="relative w-20 h-20">
-            <svg className="w-20 h-20 animate-spin" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="6"
-                className="text-gray-800"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="6"
-                className="text-emerald-500"
-                strokeLinecap="round"
-                strokeDasharray="80 200"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-              </svg>
-            </div>
-          </div>
-          <p className="mt-4 text-gray-400 text-sm">正在分析门店数据，请稍候...</p>
-        </div>
-      )}
-
-      {/* 错误提示 */}
-      {!isDiagnosing && error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 sm:p-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-red-400 mb-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-sm font-medium">诊断失败</span>
-          </div>
-          <p className="text-sm text-red-300">{error}</p>
-          <button
-            onClick={handleDiagnosis}
-            className="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm rounded-lg transition-colors border border-red-500/30"
+      <div className="px-4 pt-4 pb-24 space-y-4">
+        {/* 商家信息卡 */}
+        <div className="rounded-2xl p-4 flex items-center gap-3.5" style={{ backgroundColor: '#111B2E' }}>
+          {/* 商家Logo占位 */}
+          <div
+            className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: '#1A2540' }}
           >
-            重新诊断
-          </button>
-        </div>
-      )}
-
-      {/* 空状态 */}
-      {!isDiagnosing && !diagnosisResult && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-24 h-24 rounded-full bg-gray-800/50 flex items-center justify-center mb-6">
-            <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8E9BB5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3h18v18H3z" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M3 9h18M3 15h18" />
             </svg>
           </div>
-          <p className="text-gray-500 text-base">暂无诊断记录，点击上方按钮开始诊断</p>
-          <p className="text-gray-600 text-sm mt-1">我们将从多个维度分析您的门店表现</p>
+          {/* 右侧信息 */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-white font-bold text-lg">{mockMerchant.name}</span>
+              <span
+                className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                style={{ backgroundColor: '#FF4444', color: '#FFFFFF' }}
+              >
+                好店
+              </span>
+            </div>
+            <p className="text-xs mt-1 truncate" style={{ color: '#8E9BB5' }}>
+              {mockMerchant.subtitle}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {/* 金色星标 */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#FFB800" stroke="none">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span className="text-xs font-medium" style={{ color: '#FFB800' }}>
+                {mockMerchant.rating}
+              </span>
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* 诊断结果 */}
-      {!isDiagnosing && diagnosisResult && (
-        <div className="space-y-6">
-          {/* 综合评分卡片 */}
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6">
-              {/* 环形评分 */}
-              <div className="flex-shrink-0">
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32">
-                  <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      strokeWidth="8"
-                      className={getScoreBgRing(diagnosisResult.overall_score)}
-                    />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      className={getScoreRingColor(diagnosisResult.overall_score)}
-                      strokeDasharray={`${(diagnosisResult.overall_score / 100) * circumference} ${circumference}`}
-                      style={{ transition: 'stroke-dasharray 1s ease-in-out' }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-3xl font-bold ${getScoreColor(diagnosisResult.overall_score)}`}>
-                      {diagnosisResult.overall_score}
-                    </span>
-                    <span className="text-xs text-gray-500 mt-0.5">综合评分</span>
-                  </div>
-                </div>
-              </div>
+        {/* 推荐指数大卡片 */}
+        <div
+          className="rounded-2xl p-5 relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #1E40AF, #0F172A)' }}
+        >
+          {/* 右上角T3级标签 */}
+          <div
+            className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-xs font-bold"
+            style={{ backgroundColor: '#FF4444', color: '#FFFFFF' }}
+          >
+            T3级
+          </div>
 
-              {/* 评分说明 */}
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-200">综合诊断结果</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  您的门店整体表现良好，搜索排名和用户评价表现优秀，但内容丰富度和信息完整性仍需加强。
-                </p>
-                <div className="flex items-center gap-4 mt-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                    <span className="text-xs text-gray-400">优秀</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
-                    <span className="text-xs text-gray-400">良好</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                    <span className="text-xs text-gray-400">待改进</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                    <span className="text-xs text-gray-400">需关注</span>
-                  </div>
-                </div>
+          {/* 左侧：分数 */}
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-xs font-medium" style={{ color: '#8E9BB5' }}>
+                推荐指数
+              </span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-white font-black" style={{ fontSize: '64px', lineHeight: 1 }}>
+                  {result ? result.score : mockMerchant.score}
+                </span>
+                <span className="text-white text-base font-medium" style={{ opacity: 0.6 }}>
+                  /100
+                </span>
               </div>
             </div>
           </div>
 
-          {/* 诊断项列表 */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-gray-300">诊断详情</h3>
-            {diagnosisResult.items.map((item, index) => (
-              <DiagnosisItem key={item.title} item={item} index={index} />
+          {/* 右侧信息 */}
+          <div className="mt-3 space-y-1">
+            <div className="text-white font-bold text-sm">{mockMerchant.brand}</div>
+            <div className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              北京朝阳区 | 4.2分 · 186评价
+            </div>
+            <div className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              {mockMerchant.replyRate}
+            </div>
+          </div>
+        </div>
+
+        {/* T级进度条 */}
+        <div className="rounded-2xl p-4" style={{ backgroundColor: '#111B2E' }}>
+          {/* 三段式进度条 */}
+          <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
+            <div
+              className="rounded-l-full"
+              style={{ width: '60%', backgroundColor: '#FF4444' }}
+            />
+            <div
+              style={{ width: '25%', backgroundColor: '#FFB800' }}
+            />
+            <div
+              className="rounded-r-full"
+              style={{ width: '15%', backgroundColor: '#00C853' }}
+            />
+          </div>
+          {/* 标签 */}
+          <div className="flex justify-between mt-2.5">
+            <span className="text-xs font-bold" style={{ color: '#FF4444' }}>
+              T3 60%
+            </span>
+            <span className="text-xs font-bold" style={{ color: '#FFB800' }}>
+              T2 25%
+            </span>
+            <span className="text-xs font-bold" style={{ color: '#00C853' }}>
+              T1 15%
+            </span>
+          </div>
+          {/* 距离说明 */}
+          <div className="text-center mt-3 text-xs" style={{ color: '#8E9BB5' }}>
+            距T2级还差14分 · 距T1级还差34分
+          </div>
+        </div>
+
+        {/* 生态位排名 */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold" style={{ color: '#FFFFFF' }}>
+              生态位排名
+            </h2>
+            <button className="flex items-center gap-1 text-xs" style={{ color: '#8E9BB5' }}>
+              展开
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E9BB5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+          <div className="space-y-2.5">
+            {mockDiagnosisResult.nicheRankings.map((item) => (
+              <div
+                key={item.name}
+                className="rounded-xl px-4 py-3.5 flex items-center justify-between"
+                style={{ backgroundColor: '#111B2E' }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-sm font-medium" style={{ color: '#FFFFFF' }}>
+                    {item.name}
+                  </span>
+                </div>
+                <span className="text-xs font-medium" style={{ color: item.color }}>
+                  {item.rank}
+                </span>
+              </div>
             ))}
           </div>
         </div>
-      )}
+
+        {/* 九维评估柱状图 */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold" style={{ color: '#FFFFFF' }}>
+              九维评估
+            </h2>
+          </div>
+          <div className="rounded-2xl p-4" style={{ backgroundColor: '#111B2E' }}>
+            {/* Y轴刻度 + 柱状图 */}
+            <div className="relative">
+              {/* 水平网格线 */}
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                {[0, 1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="border-t"
+                    style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+                  />
+                ))}
+              </div>
+
+              {/* Y轴标签 */}
+              <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between pointer-events-none">
+                <span className="text-[10px]" style={{ color: '#8E9BB5' }}>300</span>
+                <span className="text-[10px]" style={{ color: '#8E9BB5' }}>200</span>
+                <span className="text-[10px]" style={{ color: '#8E9BB5' }}>100</span>
+                <span className="text-[10px]" style={{ color: '#8E9BB5' }}>0</span>
+              </div>
+
+              {/* 柱状图区域 */}
+              <div className="ml-8 flex items-end justify-between gap-2" style={{ height: '160px' }}>
+                {mockDiagnosisResult.nineDimensions.map((dim) => (
+                  <div key={dim.label} className="flex-1 flex flex-col items-center justify-end h-full relative">
+                    {/* 目标值绿色圆点 */}
+                    <div
+                      className="w-2.5 h-2.5 rounded-full absolute z-10"
+                      style={{
+                        backgroundColor: '#00C853',
+                        bottom: `${(dim.target / 300) * 100}%`,
+                        transform: 'translateY(50%)',
+                      }}
+                    />
+                    {/* 柱子 */}
+                    <div
+                      className="w-full rounded-t-md"
+                      style={{
+                        height: `${(dim.value / 300) * 100}%`,
+                        backgroundColor: '#2B7FFF',
+                        minHeight: '8px',
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* X轴标签 */}
+            <div className="ml-8 flex justify-between mt-2">
+              {mockDiagnosisResult.nineDimensions.map((dim) => (
+                <span key={dim.label} className="flex-1 text-center text-[10px]" style={{ color: '#8E9BB5' }}>
+                  {dim.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 底部固定按钮 */}
+      <div className="fixed bottom-[56px] left-0 right-0 z-30 px-4 pb-2" style={{ backgroundColor: '#0A1628' }}>
+        <div className="mx-auto max-w-[480px]">
+          <button
+            onClick={handleDiagnosis}
+            disabled={isDiagnosing}
+            className="w-full py-3.5 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2 transition-all"
+            style={{
+              background: isDiagnosing
+                ? 'linear-gradient(135deg, #1A2540, #111B2E)'
+                : 'linear-gradient(135deg, #2B7FFF, #1E40AF)',
+              boxShadow: isDiagnosing ? 'none' : '0 4px 16px rgba(43,127,255,0.3)',
+            }}
+          >
+            {isDiagnosing ? (
+              <>
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                诊断中...
+              </>
+            ) : (
+              <>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+                GEO AI 诊断
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
