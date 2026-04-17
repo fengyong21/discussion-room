@@ -1,37 +1,12 @@
 import { useState } from 'react'
+import { runDiagnosis } from '../api'
 
-const mockDiagnosis = {
-  overall_score: 87,
-  items: [
-    {
-      title: '搜索排名',
-      desc: '百度地图"面馆"搜索排名第5',
-      score: 92,
-      level: 'good',
-      suggestion: '继续保持，建议优化关键词覆盖',
-    },
-    {
-      title: '用户评价',
-      desc: '大众点评4.6分，高德4.5分',
-      score: 86,
-      level: 'good',
-      suggestion: '可以引导更多顾客写好评',
-    },
-    {
-      title: '内容丰富度',
-      desc: '缺少视频内容，图片更新频率偏低',
-      score: 65,
-      level: 'warn',
-      suggestion: '建议每周发布2-3条短视频内容',
-    },
-    {
-      title: '信息完整性',
-      desc: '缺少营业时间、停车位等信息',
-      score: 45,
-      level: 'bad',
-      suggestion: '请补充完整门店基础信息',
-    },
-  ],
+// 将 API 返回的 score 映射为 level
+function scoreToLevel(score) {
+  if (score >= 90) return 'excellent'
+  if (score >= 75) return 'good'
+  if (score >= 60) return 'warn'
+  return 'bad'
 }
 
 const diagnosisTypes = [
@@ -182,16 +157,33 @@ function DiagnosisPage() {
   const [diagnosisType, setDiagnosisType] = useState('all')
   const [isDiagnosing, setIsDiagnosing] = useState(false)
   const [diagnosisResult, setDiagnosisResult] = useState(null)
+  const [error, setError] = useState(null)
 
-  const handleDiagnosis = () => {
+  const handleDiagnosis = async () => {
     setIsDiagnosing(true)
     setDiagnosisResult(null)
+    setError(null)
 
-    // 模拟 2 秒加载后显示结果
-    setTimeout(() => {
-      setDiagnosisResult(mockDiagnosis)
+    try {
+      const res = await runDiagnosis()
+      // API 返回 { id, overall_score, dimensions: [{name, score, analysis, suggestion}], created_at }
+      const mappedResult = {
+        overall_score: res.overall_score,
+        items: (res.dimensions || []).map((dim) => ({
+          title: dim.name,
+          desc: dim.analysis || '',
+          score: dim.score,
+          level: scoreToLevel(dim.score),
+          suggestion: dim.suggestion || '',
+        })),
+      }
+      setDiagnosisResult(mappedResult)
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || err.message || '诊断失败，请稍后重试'
+      setError(errorMsg)
+    } finally {
       setIsDiagnosing(false)
-    }, 2000)
+    }
   }
 
   const circumference = 2 * Math.PI * 54
@@ -287,6 +279,25 @@ function DiagnosisPage() {
             </div>
           </div>
           <p className="mt-4 text-gray-400 text-sm">正在分析门店数据，请稍候...</p>
+        </div>
+      )}
+
+      {/* 错误提示 */}
+      {!isDiagnosing && error && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 sm:p-6 text-center">
+          <div className="flex items-center justify-center gap-2 text-red-400 mb-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium">诊断失败</span>
+          </div>
+          <p className="text-sm text-red-300">{error}</p>
+          <button
+            onClick={handleDiagnosis}
+            className="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm rounded-lg transition-colors border border-red-500/30"
+          >
+            重新诊断
+          </button>
         </div>
       )}
 
