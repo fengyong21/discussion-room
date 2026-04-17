@@ -142,23 +142,23 @@ function HomePage() {
     <div className="space-y-6">
       {/* 欢迎语 */}
       <div>
-        <h2 className="text-2xl font-bold text-white">工作台总览</h2>
-        <p className="mt-1 text-gray-400 text-sm">
+        <h2 className="text-xl sm:text-2xl font-bold text-white">工作台总览</h2>
+        <p className="mt-1 text-gray-400 text-xs sm:text-sm">
           欢迎回来，示例商家。以下是您的门店运营数据概览。
         </p>
       </div>
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className={`bg-[#111827] border border-[#1e293b] border-t-2 ${stat.borderColor} rounded-xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20`}
+            className={`bg-[#111827] border border-[#1e293b] border-t-2 ${stat.borderColor} rounded-xl p-3 sm:p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20`}
           >
-            <p className="text-sm text-gray-400 mb-2">{stat.label}</p>
+            <p className="text-xs sm:text-sm text-gray-400 mb-1 sm:mb-2">{stat.label}</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-white">{stat.value}</span>
-              <span className="text-sm text-gray-500">{stat.unit}</span>
+              <span className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</span>
+              <span className="text-xs sm:text-sm text-gray-500">{stat.unit}</span>
             </div>
             <div className="mt-2 flex items-center gap-1.5">
               {stat.changeType === 'up' && (
@@ -179,18 +179,18 @@ function HomePage() {
       {/* 快捷操作区 */}
       <div>
         <h3 className="text-base font-semibold text-white mb-3">快捷操作</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {quickActions.map((action) => (
             <button
               key={action.label}
               onClick={() => navigate(action.path)}
-              className={`bg-gradient-to-br ${action.gradient} border ${action.borderColor} rounded-xl p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 group cursor-pointer`}
+              className={`bg-gradient-to-br ${action.gradient} border ${action.borderColor} rounded-xl p-4 sm:p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 group cursor-pointer`}
             >
-              <div className={`w-10 h-10 ${action.iconBg} rounded-lg flex items-center justify-center ${action.iconColor} mb-3 group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 ${action.iconBg} rounded-lg flex items-center justify-center ${action.iconColor} mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300`}>
                 {action.icon}
               </div>
               <h4 className="text-sm font-semibold text-white mb-1">{action.label}</h4>
-              <p className="text-xs text-gray-400 leading-relaxed">{action.desc}</p>
+              <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{action.desc}</p>
             </button>
           ))}
         </div>
@@ -204,16 +204,16 @@ function HomePage() {
             {recentActivities.map((activity) => (
               <li
                 key={activity.id}
-                className="flex items-start gap-4 px-5 py-4 hover:bg-[#1e293b]/50 transition-colors duration-200"
+                className="flex items-start gap-3 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 hover:bg-[#1e293b]/50 transition-colors duration-200"
               >
                 <div className="flex-shrink-0 mt-1.5">
                   <div className={`w-2 h-2 rounded-full ${activity.dotColor}`}></div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-200">{activity.action}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-200">{activity.action}</p>
                   <p className="text-xs text-gray-500 mt-0.5 truncate">{activity.detail}</p>
                 </div>
-                <span className="flex-shrink-0 text-xs text-gray-600">{activity.time}</span>
+                <span className="flex-shrink-0 text-[10px] sm:text-xs text-gray-600 whitespace-nowrap">{activity.time}</span>
               </li>
             ))}
           </ul>
