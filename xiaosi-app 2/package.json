@@ -1,0 +1,31 @@
+{
+  "name": "xiaosi-pet",
+  "version": "1.0.0",
+  "description": "🐾 小司 - 公司宠物桌面应用",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac",
+    "build:dir": "electron-builder --mac --dir"
+  },
+  "build": {
+    "appId": "com.xiaosi.pet",
+    "productName": "小司",
+    "mac": {
+      "category": "public.app-category.entertainment",
+      "target": "dir",
+      "icon": "src/icon.icns"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "src/main.js"
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
