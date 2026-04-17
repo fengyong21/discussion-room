@@ -115,6 +115,52 @@ function getProgressBarColor(score) {
   return 'bg-red-500'
 }
 
+function RankingCard({ item }) {
+  return (
+    <div
+      className={`rounded-xl border p-4 transition-colors ${
+        item.isMine
+          ? 'bg-emerald-500/10 border-emerald-500/30'
+          : 'bg-gray-900 border-gray-800'
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          {getRankBadge(item.rank)}
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-gray-100">{item.name}</span>
+              {item.isMine && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-medium rounded-full border border-emerald-500/30">
+                  我的
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        {getTrendDisplay(item.trend)}
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-semibold text-gray-100">{item.rating}</span>
+          <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        </div>
+        <div className="flex items-center gap-2 flex-1 max-w-[140px]">
+          <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${getProgressBarColor(item.geoScore)}`}
+              style={{ width: `${item.geoScore}%` }}
+            />
+          </div>
+          <span className="text-sm font-semibold text-gray-200 w-8 text-right">{item.geoScore}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function RankingPage() {
   const [industry, setIndustry] = useState('面馆')
   const [radius, setRadius] = useState('3km')
@@ -131,15 +177,15 @@ function RankingPage() {
     <div className="space-y-6">
       {/* 页面标题 */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-100">竞品排行</h2>
-        <p className="mt-1 text-sm text-gray-400">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-100">竞品排行</h2>
+        <p className="mt-1 text-xs sm:text-sm text-gray-400">
           查看周边竞品数据排行，了解市场动态与竞争格局
         </p>
       </div>
 
       {/* 筛选栏 */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-400 whitespace-nowrap">行业</label>
             <select
@@ -176,7 +222,7 @@ function RankingPage() {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`sm:ml-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               isRefreshing
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
@@ -200,8 +246,8 @@ function RankingPage() {
         </div>
       </div>
 
-      {/* 排行表格 */}
-      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      {/* 排行表格 - 桌面端显示 */}
+      <div className="hidden sm:block bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -284,10 +330,17 @@ function RankingPage() {
         </div>
       </div>
 
+      {/* 排行卡片列表 - 手机端显示 */}
+      <div className="sm:hidden space-y-3">
+        {rankingData.map((item) => (
+          <RankingCard key={item.rank} item={item} />
+        ))}
+      </div>
+
       {/* 底部分析卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* 我的优势 */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
               <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -319,7 +372,7 @@ function RankingPage() {
         </div>
 
         {/* 待改进项 */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
               <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
