@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = 'https://zoxdjxhqqjmc.sealosbja.site'
+const API_BASE = 'https://fgnerlhovqmr.sealosbja.site'
 
 const request = axios.create({
   baseURL: API_BASE + '/api',
