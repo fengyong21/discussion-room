@@ -128,10 +128,10 @@ function ContentPage() {
   return (
     <div className="space-y-6">
       {/* 顶部操作区 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-100">内容生成</h2>
-          <p className="mt-1 text-sm text-gray-400">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-100">内容生成</h2>
+          <p className="mt-1 text-xs sm:text-sm text-gray-400">
             AI 智能生成营销内容，提升门店曝光
           </p>
         </div>
@@ -144,7 +144,7 @@ function ContentPage() {
       </div>
 
       {/* 内容类型选择 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
         {contentTypes.map((type) => (
           <button
             key={type.id}
@@ -152,14 +152,14 @@ function ContentPage() {
               setSelectedType(type.id)
               setGeneratedResult('')
             }}
-            className={`relative p-5 rounded-xl border-2 transition-all text-left ${
+            className={`relative p-4 sm:p-5 rounded-xl border-2 transition-all text-left ${
               selectedType === type.id
                 ? `${type.activeBorder} ${type.activeBg}`
                 : `${type.bgClass} border-transparent`
             }`}
           >
-            <div className="text-3xl mb-3">{type.icon}</div>
-            <div className="text-base font-semibold text-gray-100">
+            <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">{type.icon}</div>
+            <div className="text-sm sm:text-base font-semibold text-gray-100">
               {type.label}
             </div>
             <div className="text-xs text-gray-400 mt-1">
@@ -190,7 +190,7 @@ function ContentPage() {
 
       {/* 生成表单 */}
       {selectedType && (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-4">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6 space-y-4">
           <h3 className="text-lg font-semibold text-gray-100">
             {selectedType === 'xiaohongshu' && '小红书种草文案设置'}
             {selectedType === 'video' && '短视频脚本设置'}
@@ -215,7 +215,7 @@ function ContentPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   字数选择
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   {[
                     { value: '300', label: '短文 300字' },
                     { value: '800', label: '长文 800字' }
@@ -361,17 +361,17 @@ function ContentPage() {
       )}
 
       {generatedResult && !isGenerating && (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 space-y-4">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-100">生成结果</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-100">生成结果</h3>
             <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
               {selectedType === 'xiaohongshu' && '小红书文案'}
               {selectedType === 'video' && '视频脚本'}
               {selectedType === 'review' && '评价回复'}
             </span>
           </div>
-          <div className="bg-gray-800 rounded-lg p-5">
-            <pre className="whitespace-pre-wrap text-sm text-gray-200 leading-relaxed font-sans">
+          <div className="bg-gray-800 rounded-lg p-3 sm:p-5">
+            <pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-200 leading-relaxed font-sans">
               {generatedResult}
             </pre>
           </div>
