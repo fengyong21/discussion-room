@@ -1,12 +1,20 @@
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+FROM node:20-alpine
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+WORKDIR /app
+
+# 复制依赖文件并安装
+COPY package.json ./
+RUN npm install --production
+
+# 复制应用代码（app.js → app.mjs）
+COPY app.js ./app.mjs
+
+# 暴露端口
+EXPOSE 8080
+
+# 环境变量
+ENV PORT=8080
+ENV NODE_ENV=production
+
+# 启动
+CMD ["node", "app.mjs"]
