@@ -3,22 +3,29 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [main]
+    paths:
+      - 'app.js'
+      - 'package.json'
+      - 'Dockerfile'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: xuerui21
-          password: ${{ secrets.DOCKER_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: xuerui21/chuangyi-incubator:latest
+          tags: ghcr.io/fengyong21/chuangyi-incubator:latest
