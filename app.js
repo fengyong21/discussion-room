@@ -3669,8 +3669,13 @@ export default app;
 
 // Node.js 环境下启动 HTTP 服务（Sealos / 本地开发）
 if (typeof process !== 'undefined' && process.versions?.node) {
-  const port = parseInt(process.env.PORT || '80');
+  const port = parseInt(process.env.PORT || '8080');
   console.log('🚀 创意孵化机启动中... 端口: ' + port);
-  serve({ fetch: app.fetch, port: port });
+  serve({ fetch: app.fetch, port: port, hostname: '0.0.0.0' }).then(() => {
+    console.log('✅ 创意孵化机已启动，监听端口: ' + port);
+  }).catch((err) => {
+    console.error('❌ 启动失败:', err);
+    process.exit(1);
+  });
 }
 
