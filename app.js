@@ -3012,7 +3012,8 @@ function loadRoomData(data) {
 async function sendMessage() {
   var input = document.getElementById('user-input');
   var text = input.value.trim();
-  if (!text || isProcessing) return;
+  if (!text) return;
+  if (isProcessing) { console.log('[sendMessage] isProcessing=true, skipping'); return; }
   if (text.length > 500) {
     text = text.substring(0, 500);
     // 显示提示
@@ -3030,15 +3031,19 @@ async function sendMessage() {
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
   try {
-    await scheduleResponse(text);
+    await Promise.race([
+      scheduleResponse(text),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 30000))
+    ]);
   } catch(e) {
     console.error(e);
     var hint = e.message || '未知错误';
     if (hint.indexOf('Failed to fetch') >= 0 || hint.indexOf('NetworkError') >= 0) hint = '网络连接失败，请稍后重试。';
-    await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\\n\\n' + hint });
+    await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\n\n' + hint });
+  } finally {
+    isProcessing = false;
+    document.getElementById('send-btn').disabled = false;
   }
-  isProcessing = false;
-  document.getElementById('send-btn').disabled = false;
 }
 
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
