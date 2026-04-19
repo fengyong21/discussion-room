@@ -527,17 +527,16 @@ function getHTML(roomId) {
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>朋友茶话会 · 创意孵化</title>
 <style>
-@import url('https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a28;--card:#1e1e2e;--border:#2a2a3e;--text:#e8e6e3;--text2:#94949e;--accent:#ff6b35;--accent2:#ff8c5a;--radius:16px;--radius-sm:10px;--style-color:#4ecdc4}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .bg-glow{position:fixed;width:300px;height:300px;border-radius:50%;filter:blur(100px);opacity:.08;pointer-events:none;z-index:0}
 .bg-glow.g1{top:-100px;right:-100px;background:var(--style-color)}
 .bg-glow.g2{bottom:-100px;left:-100px;background:#a78bfa}
 #app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:8px;flex-wrap:wrap}
 .topbar-left{display:flex;align-items:center;gap:8px;min-width:0}
-.topbar .logo{font-family:'ZCOOL KuaiLe',cursive;font-size:18px;color:var(--accent);white-space:nowrap}
+.topbar .logo{font-family:'PingFang SC',cursive;font-size:18px;color:var(--accent);white-space:nowrap}
 .style-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--style-color)18;color:var(--style-color);border:1px solid var(--style-color)44;white-space:nowrap;cursor:pointer;transition:all .2s}
 .style-tag:hover{background:var(--style-color)30}
 .topbar-right{display:flex;align-items:center;gap:6px}
@@ -690,7 +689,7 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text
 .join-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:36px 28px 28px;max-width:380px;width:100%;text-align:center}
 .join-emoji{font-size:48px;margin-bottom:12px;animation:float 3s ease-in-out infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.join-card h2{font-size:22px;margin-bottom:8px;font-family:'ZCOOL KuaiLe',cursive;color:var(--text)}
+.join-card h2{font-size:22px;margin-bottom:8px;font-family:'PingFang SC',cursive;color:var(--text)}
 .join-subtitle{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6}
 .join-card input{width:100%;padding:14px 18px;border-radius:14px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:16px;transition:border .2s}
 .join-card input:focus{border-color:var(--accent)}
