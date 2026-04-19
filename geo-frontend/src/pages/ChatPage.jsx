@@ -49,12 +49,6 @@ function ThinkingDots() {
           }}
         />
       ))}
-      <style>{`
-        @keyframes thinkBounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-          30% { transform: translateY(-8px); opacity: 1; }
-        }
-      `}</style>
     </div>
   )
 }
@@ -99,12 +93,6 @@ function AiMessage({ msg, isLatest, isTyping }) {
         {isLatest && isTyping && !done && (
           <span className="inline-block w-[2px] h-[14px] ml-[2px] align-middle" style={{ background: 'var(--blue)', animation: 'cursorBlink 0.8s step-end infinite' }} />
         )}
-        <style>{`
-          @keyframes cursorBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-          }
-        `}</style>
       </div>
     </div>
   )
@@ -162,6 +150,7 @@ export default function ChatPage() {
   }, [])
 
   const handleRunDiagnosis = async () => {
+    if (showDiagAnim || sending) return
     setShowDiagAnim(true)
   }
 
@@ -234,7 +223,7 @@ export default function ChatPage() {
   const isLastTyping = lastMsg?.role === 'ai' && typingMsgId === lastMsg?.id
 
   return (
-    <div className="flex flex-col h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="flex flex-col h-[calc(100vh-72px)]" style={{ background: 'var(--bg)' }}>
       {showDiagAnim && <DiagnosisAnimation onDone={onDiagAnimDone} />}
 
       {/* 顶部导航栏 */}

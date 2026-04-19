@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #080D19;
+  --bg-card: #111827;
+  --bg-card2: #1A2332;
+  --border: rgba(255,255,255,0.06);
+  --text: #F1F5F9;
+  --text2: #94A3B8;
+  --text3: #475569;
+  --blue: #3B82F6;
+  --blue-light: #60A5FA;
+  --blue-dark: #1D4ED8;
+  --blue-glow: rgba(59,130,246,0.12);
+  --green: #10B981;
+  --green-light: #34D399;
+  --green-glow: rgba(16,185,129,0.10);
+  --red: #EF4444;
+  --red-light: #F87171;
+  --red-glow: rgba(239,68,68,0.10);
+  --orange: #F59E0B;
+  --orange-light: #FBBF24;
+  --orange-glow: rgba(245,158,11,0.10);
+  --purple: #8B5CF6;
+  --purple-glow: rgba(139,92,246,0.10);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 隐藏移动端滚动条 */
+*::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+html { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 桌面端显示细滚动条 */
+@media (min-width: 768px) {
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  html { -ms-overflow-style: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+}
+
+/* 卡片悬浮微动效 */
+.cursor-pointer {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 页面切换淡入 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 环形进度条动画 */
+@keyframes ringProgress {
+  from { stroke-dashoffset: var(--circumference); }
+}
+
+/* 脉冲动画 - 用于通知红点 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-dot {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, var(--blue-light), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 卡片光泽效果 */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.02) 40%,
+    rgba(255,255,255,0.05) 50%,
+    rgba(255,255,255,0.02) 60%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: rotate(30deg);
+  pointer-events: none;
+}
+
+/* 安全区域适配（iPhone底部） */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 思考中弹跳动画 */
+@keyframes thinkBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* 光标闪烁动画 */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 底部弹出动画 */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Toast淡入淡出 */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(8px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}

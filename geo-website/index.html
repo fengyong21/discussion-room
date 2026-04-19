@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEO智能助手 - 让AI搜索引擎优先推荐你的门店</title>
+<meta name="description" content="GEO智能助手帮助本地商家提升在豆包、文心一言、Kimi等AI平台中的推荐排名，精准获取3-5公里内潜在客户">
+<style>
+:root {
+  --bg: #080D19;
+  --bg-card: #111827;
+  --bg-card2: #1A2332;
+  --border: rgba(255,255,255,0.06);
+  --text: #F1F5F9;
+  --text2: #94A3B8;
+  --text3: #475569;
+  --blue: #3B82F6;
+  --blue-light: #60A5FA;
+  --blue-dark: #1D4ED8;
+  --blue-glow: rgba(59,130,246,0.12);
+  --green: #10B981;
+  --green-light: #34D399;
+  --green-glow: rgba(16,185,129,0.10);
+  --red: #EF4444;
+  --red-light: #F87171;
+  --red-glow: rgba(239,68,68,0.10);
+  --orange: #F59E0B;
+  --orange-light: #FBBF24;
+  --orange-glow: rgba(245,158,11,0.10);
+  --purple: #8B5CF6;
+  --purple-light: #A78BFA;
+  --purple-glow: rgba(139,92,246,0.10);
+  --cyan: #06B6D4;
+  --r: 16px;
+  --r-sm: 10px;
+  --r-xs: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+*::-webkit-scrollbar { width: 0; height: 0; background: transparent; }
+html { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+@keyframes score-fill {
+  from { stroke-dashoffset: 283; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========== BACKGROUND DECORATIONS ========== */
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-orb-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+  top: -200px; right: -200px;
+}
+.bg-orb-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
+  top: 400px; left: -200px;
+}
+.bg-orb-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%);
+  bottom: 200px; right: -100px;
+}
+.bg-orb-4 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(16,185,129,0.04) 0%, transparent 70%);
+  top: 1200px; left: 50%;
+  transform: translateX(-50%);
+}
+.bg-orb-5 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%);
+  top: 2800px; left: -150px;
+}
+
+/* ========== CONTAINER ========== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ========== NAVIGATION ========== */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0 24px;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+}
+.navbar.scrolled {
+  background: rgba(8,13,25,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 1px 0 var(--border);
+}
+.navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+}
+.nav-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.nav-logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.nav-logo-text span {
+  background: linear-gradient(135deg, var(--blue-light), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a:hover {
+  color: var(--text);
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+.nav-links a:hover::after {
+  width: 100%;
+}
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  cursor: pointer;
+}
+.nav-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+}
+.nav-cta::after { display: none !important; }
+
+/* Mobile Menu */
+.mobile-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  padding: 8px;
+  background: none;
+  border: none;
+}
+.mobile-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+.mobile-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.mobile-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+.mobile-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  background: rgba(8,13,25,0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  z-index: 999;
+}
+.mobile-menu.active { display: block; }
+.mobile-menu a {
+  display: block;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.2s;
+}
+.mobile-menu a:last-child { border-bottom: none; }
+.mobile-menu a:hover { color: var(--text); }
+.mobile-menu .nav-cta {
+  display: block;
+  text-align: center;
+  margin-top: 16px;
+  padding: 14px 24px;
+}
+
+/* ========== SECTION COMMON ========== */
+.section {
+  padding: 100px 0;
+  position: relative;
+  overflow: hidden;
+}
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--blue-glow);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-light);
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+.section-desc {
+  font-size: 17px;
+  color: var(--text2);
+  line-height: 1.7;
+  max-width: 600px;
+}
+.section-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+.section-header .section-desc {
+  margin: 0 auto;
+}
+
+/* ========== HERO ========== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 72px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+.hero-content {
+  animation: slideInLeft 0.8s ease;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--blue-glow);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-light);
+  margin-bottom: 24px;
+}
+.hero-badge-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: pulse-glow 2s infinite;
+}
+.hero h1 {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  margin-bottom: 20px;
+}
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--blue-light), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-subtitle {
+  font-size: 18px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  max-width: 520px;
+}
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(59,130,246,0.35);
+}
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-outline:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* Hero Visual - Dashboard Mockup */
+.hero-visual {
+  animation: slideInRight 0.8s ease;
+  position: relative;
+}
+.dashboard-mockup {
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+  overflow: hidden;
+  animation: float 6s ease-in-out infinite;
+}
+.mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.mockup-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.mockup-dot-red { background: #EF4444; }
+.mockup-dot-yellow { background: #F59E0B; }
+.mockup-dot-green { background: #10B981; }
+.mockup-title {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 500;
+}
+.mockup-body {
+  padding: 20px;
+}
+.mockup-score-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.mockup-score-card {
+  flex: 1;
+  background: var(--bg-card2);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--border);
+}
+.score-ring-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+}
+.score-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.06);
+  stroke-width: 6;
+}
+.score-ring-fill {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  animation: score-fill 1.5s ease-out forwards;
+}
+.score-ring-fill.blue { stroke: var(--blue); }
+.score-ring-fill.green { stroke: var(--green); }
+.score-ring-fill.purple { stroke: var(--purple); }
+.score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  font-weight: 800;
+}
+.score-label {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 500;
+}
+.mockup-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mockup-stat-card {
+  background: var(--bg-card2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.mockup-stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.mockup-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.mockup-stat-change {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.mockup-stat-change.up { color: var(--green); }
+.mockup-stat-change.down { color: var(--red); }
+.mockup-chart {
+  background: var(--bg-card2);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.mockup-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.mockup-chart-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.mockup-chart-period {
+  font-size: 11px;
+  color: var(--text3);
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+}
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 60px;
+}
+.chart-bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s;
+  min-width: 0;
+}
+.chart-bar.blue { background: linear-gradient(to top, var(--blue-dark), var(--blue)); }
+.chart-bar.green { background: linear-gradient(to top, #059669, var(--green)); }
+.chart-bar.purple { background: linear-gradient(to top, #7C3AED, var(--purple)); }
+
+/* Hero Stats Bar */
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+}
+.hero-stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--text), var(--text2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-stat-label {
+  font-size: 14px;
+  color: var(--text3);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ========== PAIN POINTS ========== */
+.pain-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.pain-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 36px 28px;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.pain-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.pain-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+.pain-card:nth-child(1)::before {
+  background: linear-gradient(90deg, var(--red), var(--orange));
+}
+.pain-card:nth-child(2)::before {
+  background: linear-gradient(90deg, var(--orange), var(--purple));
+}
+.pain-card:nth-child(3)::before {
+  background: linear-gradient(90deg, var(--purple), var(--blue));
+}
+.pain-card-glow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  filter: blur(50px);
+  opacity: 0.15;
+  pointer-events: none;
+}
+.pain-card:nth-child(1) .pain-card-glow { background: var(--red); }
+.pain-card:nth-child(2) .pain-card-glow { background: var(--orange); }
+.pain-card:nth-child(3) .pain-card-glow { background: var(--purple); }
+.pain-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.pain-card:nth-child(1) .pain-icon {
+  background: var(--red-glow);
+  color: var(--red-light);
+}
+.pain-card:nth-child(2) .pain-icon {
+  background: var(--orange-glow);
+  color: var(--orange-light);
+}
+.pain-card:nth-child(3) .pain-icon {
+  background: var(--purple-glow);
+  color: var(--purple-light);
+}
+.pain-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+.pain-card p {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.7;
+  position: relative;
+  z-index: 1;
+}
+
+/* ========== FEATURES ========== */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+.feature-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 36px;
+  border: 1px solid var(--border);
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  border-color: rgba(59,130,246,0.15);
+}
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: linear-gradient(135deg, var(--blue-glow), var(--purple-glow));
+  transition: height 0.3s;
+}
+.feature-card:hover::after {
+  height: 100%;
+  opacity: 0.3;
+}
+.feature-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.feature-card:nth-child(1) .feature-icon {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05));
+  color: var(--blue-light);
+}
+.feature-card:nth-child(2) .feature-icon {
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
+  color: var(--green-light);
+}
+.feature-card:nth-child(3) .feature-icon {
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05));
+  color: var(--purple-light);
+}
+.feature-card:nth-child(4) .feature-icon {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));
+  color: var(--orange-light);
+}
+.feature-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+.feature-card p {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.7;
+  position: relative;
+  z-index: 1;
+}
+.feature-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+.feature-card:nth-child(1) .feature-tag {
+  background: var(--blue-glow);
+  color: var(--blue-light);
+}
+.feature-card:nth-child(2) .feature-tag {
+  background: var(--green-glow);
+  color: var(--green-light);
+}
+.feature-card:nth-child(3) .feature-tag {
+  background: var(--purple-glow);
+  color: var(--purple-light);
+}
+.feature-card:nth-child(4) .feature-tag {
+  background: var(--orange-glow);
+  color: var(--orange-light);
+}
+
+/* ========== HOW IT WORKS ========== */
+.steps-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  position: relative;
+}
+.step-item {
+  flex: 1;
+  max-width: 340px;
+  text-align: center;
+  position: relative;
+  padding: 0 24px;
+}
+.step-connector {
+  position: absolute;
+  top: 40px;
+  left: calc(50% + 40px);
+  width: calc(100% - 80px);
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  opacity: 0.3;
+}
+.step-item:last-child .step-connector { display: none; }
+.step-number {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-size: 28px;
+  font-weight: 800;
+  position: relative;
+  z-index: 1;
+}
+.step-item:nth-child(1) .step-number {
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05));
+  border: 2px solid rgba(59,130,246,0.2);
+  color: var(--blue-light);
+}
+.step-item:nth-child(2) .step-number {
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05));
+  border: 2px solid rgba(139,92,246,0.2);
+  color: var(--purple-light);
+}
+.step-item:nth-child(3) .step-number {
+  background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
+  border: 2px solid rgba(16,185,129,0.2);
+  color: var(--green-light);
+}
+.step-item h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.step-item p {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+
+/* ========== DATA / RESULTS ========== */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.data-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 36px 28px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.data-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.data-value {
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.data-card:nth-child(1) .data-value {
+  background: linear-gradient(135deg, var(--blue-light), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.data-card:nth-child(2) .data-value {
+  background: linear-gradient(135deg, var(--green-light), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.data-card:nth-child(3) .data-value {
+  background: linear-gradient(135deg, var(--purple-light), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.data-card:nth-child(4) .data-value {
+  background: linear-gradient(135deg, var(--orange-light), var(--orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.data-label {
+  font-size: 15px;
+  color: var(--text2);
+  font-weight: 500;
+}
+.data-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+.data-card:nth-child(1) .data-icon { background: var(--blue-glow); color: var(--blue-light); }
+.data-card:nth-child(2) .data-icon { background: var(--green-glow); color: var(--green-light); }
+.data-card:nth-child(3) .data-icon { background: var(--purple-glow); color: var(--purple-light); }
+.data-card:nth-child(4) .data-icon { background: var(--orange-glow); color: var(--orange-light); }
+
+/* ========== PRICING ========== */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.pricing-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 36px;
+  border: 1px solid var(--border);
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.pricing-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.pricing-card.featured {
+  border-color: rgba(59,130,246,0.3);
+  background: linear-gradient(180deg, rgba(59,130,246,0.06) 0%, var(--bg-card) 40%);
+  box-shadow: 0 0 60px rgba(59,130,246,0.08);
+}
+.pricing-card.featured:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 60px rgba(59,130,246,0.12);
+}
+.pricing-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 16px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.pricing-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.pricing-desc {
+  font-size: 14px;
+  color: var(--text3);
+  margin-bottom: 24px;
+}
+.pricing-price {
+  margin-bottom: 28px;
+}
+.pricing-amount {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+}
+.pricing-amount span {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text2);
+}
+.pricing-features {
+  list-style: none;
+  margin-bottom: 32px;
+}
+.pricing-features li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+}
+.pricing-features li:last-child { border-bottom: none; }
+.pricing-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.pricing-card:nth-child(1) .pricing-check {
+  background: var(--blue-glow);
+  color: var(--blue-light);
+}
+.pricing-card:nth-child(2) .pricing-check {
+  background: var(--blue-glow);
+  color: var(--blue-light);
+}
+.pricing-card:nth-child(3) .pricing-check {
+  background: var(--purple-glow);
+  color: var(--purple-light);
+}
+.pricing-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+}
+.pricing-card:nth-child(1) .pricing-btn {
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.pricing-card:nth-child(1) .pricing-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+.pricing-card:nth-child(2) .pricing-btn {
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  color: #fff;
+}
+.pricing-card:nth-child(2) .pricing-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(59,130,246,0.35);
+}
+.pricing-card:nth-child(3) .pricing-btn {
+  background: linear-gradient(135deg, var(--purple), #7C3AED);
+  color: #fff;
+}
+.pricing-card:nth-child(3) .pricing-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(139,92,246,0.35);
+}
+
+/* ========== CTA SECTION ========== */
+.cta-section {
+  padding: 100px 0;
+  position: relative;
+  overflow: hidden;
+}
+.cta-inner {
+  background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.1) 100%);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 28px;
+  padding: 80px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-inner::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.cta-inner::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  left: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.cta-section h2 {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+.cta-section p {
+  font-size: 18px;
+  color: var(--text2);
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 1;
+}
+.cta-section .btn-primary {
+  position: relative;
+  z-index: 1;
+  padding: 16px 40px;
+  font-size: 17px;
+  border-radius: 14px;
+}
+
+/* ========== FOOTER ========== */
+.footer {
+  padding: 64px 0 32px;
+  border-top: 1px solid var(--border);
+  position: relative;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+.footer-brand p {
+  font-size: 14px;
+  color: var(--text3);
+  line-height: 1.7;
+  margin-top: 16px;
+  max-width: 300px;
+}
+.footer-col h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.footer-col a {
+  display: block;
+  color: var(--text3);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 6px 0;
+  transition: color 0.2s;
+}
+.footer-col a:hover { color: var(--text2); }
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.footer-bottom p {
+  font-size: 13px;
+  color: var(--text3);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+  .hero h1 { font-size: 40px; }
+  .hero-grid { gap: 40px; }
+  .section-title { font-size: 34px; }
+  .data-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .mobile-toggle { display: flex; }
+
+  .hero { min-height: auto; padding-top: 100px; padding-bottom: 60px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hero h1 { font-size: 32px; }
+  .hero-subtitle { font-size: 16px; }
+  .hero-stats { gap: 24px; flex-wrap: wrap; }
+  .hero-stat-value { font-size: 22px; }
+
+  .section { padding: 64px 0; }
+  .section-title { font-size: 28px; }
+  .section-desc { font-size: 15px; }
+
+  .pain-cards { grid-template-columns: 1fr; gap: 16px; }
+  .features-grid { grid-template-columns: 1fr; gap: 16px; }
+  .steps-container { flex-direction: column; align-items: center; gap: 32px; }
+  .step-connector { display: none !important; }
+  .step-item { max-width: 100%; padding: 0; }
+  .data-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .data-value { font-size: 28px; }
+  .pricing-grid { grid-template-columns: 1fr; gap: 16px; max-width: 400px; margin: 0 auto; }
+  .cta-inner { padding: 48px 24px; border-radius: 20px; }
+  .cta-section h2 { font-size: 28px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+
+  .dashboard-mockup { animation: none; }
+  .hero-content { animation: none; }
+  .hero-visual { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background Orbs -->
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+<div class="bg-orb bg-orb-4"></div>
+<div class="bg-orb bg-orb-5"></div>
+
+<!-- ========== NAVIGATION ========== -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">G</div>
+      <div class="nav-logo-text"><span>GEO</span> 智能助手</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">产品功能</a></li>
+      <li><a href="#data">客户案例</a></li>
+      <li><a href="#pricing">定价方案</a></li>
+      <li><a href="#footer">关于我们</a></li>
+      <li><a href="#cta" class="nav-cta">免费试用</a></li>
+    </ul>
+    <button class="mobile-toggle" id="mobileToggle" aria-label="菜单">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features">产品功能</a>
+  <a href="#data">客户案例</a>
+  <a href="#pricing">定价方案</a>
+  <a href="#footer">关于我们</a>
+  <a href="#cta" class="nav-cta">免费试用</a>
+</div>
+
+<!-- ========== HERO ========== -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <div class="hero-badge-dot"></div>
+          GEO优化平台
+        </div>
+        <h1>让AI搜索引擎<br><span class="gradient-text">优先推荐你的门店</span></h1>
+        <p class="hero-subtitle">GEO智能助手帮助本地商家提升在豆包、文心一言、Kimi等AI平台中的推荐排名，精准获取3-5公里内潜在客户</p>
+        <div class="hero-buttons">
+          <a href="#cta" class="btn-primary">
+            立即体验
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#features" class="btn-outline">了解更多</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-value">1000+</div>
+            <div class="hero-stat-label">商家信赖</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">平均提升40%</div>
+            <div class="hero-stat-label">推荐指数</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">覆盖5大行业</div>
+            <div class="hero-stat-label">行业解决方案</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Mockup -->
+      <div class="hero-visual">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <div class="mockup-dot mockup-dot-red"></div>
+            <div class="mockup-dot mockup-dot-yellow"></div>
+            <div class="mockup-dot mockup-dot-green"></div>
+            <div class="mockup-title">GEO智能助手 - 门店概览</div>
+            <div style="width:30px"></div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-score-row">
+              <div class="mockup-score-card">
+                <div class="score-ring-container">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    <circle class="score-ring-bg" cx="40" cy="40" r="34"/>
+                    <circle class="score-ring-fill blue" cx="40" cy="40" r="34"
+                      stroke-dasharray="214"
+                      stroke-dashoffset="38"/>
+                  </svg>
+                  <div class="score-value" style="color:var(--blue-light)">82</div>
+                </div>
+                <div class="score-label">推荐指数</div>
+              </div>
+              <div class="mockup-score-card">
+                <div class="score-ring-container">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    <circle class="score-ring-bg" cx="40" cy="40" r="34"/>
+                    <circle class="score-ring-fill green" cx="40" cy="40" r="34"
+                      stroke-dasharray="214"
+                      stroke-dashoffset="64"/>
+                  </svg>
+                  <div class="score-value" style="color:var(--green-light)">70</div>
+                </div>
+                <div class="score-label">内容质量</div>
+              </div>
+              <div class="mockup-score-card">
+                <div class="score-ring-container">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    <circle class="score-ring-bg" cx="40" cy="40" r="34"/>
+                    <circle class="score-ring-fill purple" cx="40" cy="40" r="34"
+                      stroke-dasharray="214"
+                      stroke-dashoffset="85"/>
+                  </svg>
+                  <div class="score-value" style="color:var(--purple-light)">60</div>
+                </div>
+                <div class="score-label">信任等级</div>
+              </div>
+            </div>
+            <div class="mockup-stats-row">
+              <div class="mockup-stat-card">
+                <div class="mockup-stat-label">豆包排名</div>
+                <div class="mockup-stat-value" style="color:var(--green-light)">Top 3</div>
+                <div class="mockup-stat-change up">+5 位</div>
+              </div>
+              <div class="mockup-stat-card">
+                <div class="mockup-stat-label">文心一言排名</div>
+                <div class="mockup-stat-value" style="color:var(--blue-light)">Top 5</div>
+                <div class="mockup-stat-change up">+8 位</div>
+              </div>
+              <div class="mockup-stat-card">
+                <div class="mockup-stat-label">Kimi排名</div>
+                <div class="mockup-stat-value" style="color:var(--purple-light)">Top 8</div>
+                <div class="mockup-stat-change up">+12 位</div>
+              </div>
+              <div class="mockup-stat-card">
+                <div class="mockup-stat-label">本月曝光</div>
+                <div class="mockup-stat-value" style="color:var(--orange-light)">2.4K</div>
+                <div class="mockup-stat-change up">+38%</div>
+              </div>
+            </div>
+            <div class="mockup-chart">
+              <div class="mockup-chart-header">
+                <div class="mockup-chart-title">推荐指数趋势</div>
+                <div class="mockup-chart-period">近7天</div>
+              </div>
+              <div class="chart-bars">
+                <div class="chart-bar blue" style="height:40%"></div>
+                <div class="chart-bar blue" style="height:50%"></div>
+                <div class="chart-bar blue" style="height:45%"></div>
+                <div class="chart-bar green" style="height:60%"></div>
+                <div class="chart-bar green" style="height:70%"></div>
+                <div class="chart-bar purple" style="height:80%"></div>
+                <div class="chart-bar purple" style="height:92%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PAIN POINTS ========== -->
+<section class="section" id="pain">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+        问题与挑战
+      </div>
+      <h2 class="section-title">本地商家面临的AI推荐困境</h2>
+      <p class="section-desc">随着AI搜索引擎成为用户获取信息的主要入口，本地商家正面临前所未有的挑战</p>
+    </div>
+    <div class="pain-cards">
+      <div class="pain-card animate-on-scroll">
+        <div class="pain-card-glow"></div>
+        <div class="pain-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6m-3-3h6"/></svg>
+        </div>
+        <h3>AI搜不到</h3>
+        <p>门店信息分散在各个平台，AI搜索引擎无法准确抓取和推荐你的门店信息</p>
+      </div>
+      <div class="pain-card animate-on-scroll">
+        <div class="pain-card-glow"></div>
+        <div class="pain-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <h3>缺乏信任背书</h3>
+        <p>缺少可验证的资质证明和第三方引用，信源等级低，AI平台不愿优先推荐</p>
+      </div>
+      <div class="pain-card animate-on-scroll">
+        <div class="pain-card-glow"></div>
+        <div class="pain-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <h3>获客成本高</h3>
+        <p>传统广告效果递减，精准触达3-5公里内客户越来越难，营销ROI持续走低</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FEATURES ========== -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        核心功能
+      </div>
+      <h2 class="section-title">一站式GEO优化解决方案</h2>
+      <p class="section-desc">覆盖诊断、优化、监控、管理全链路，让AI搜索引擎主动推荐你的门店</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card animate-on-scroll">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h3>AI智能诊断</h3>
+        <p>九维度全面评估门店在AI搜索平台的表现，精准定位优化方向，生成可执行的改进方案</p>
+        <div class="feature-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          9大维度评估
+        </div>
+      </div>
+      <div class="feature-card animate-on-scroll">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8m8 4H8m2-8H8"/></svg>
+        </div>
+        <h3>内容智能生成</h3>
+        <p>AI自动生成选购指南、FAQ问答等AI偏好内容，提升被推荐概率，让门店信息更易被AI理解</p>
+        <div class="feature-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          AI自动生成
+        </div>
+      </div>
+      <div class="feature-card animate-on-scroll">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
+        <h3>排名实时监控</h3>
+        <p>追踪门店在豆包、文心一言、Kimi等平台的搜索排名变化，第一时间掌握竞争态势</p>
+        <div class="feature-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          多平台覆盖
+        </div>
+      </div>
+      <div class="feature-card animate-on-scroll">
+        <div class="feature-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h3>评价智能管理</h3>
+        <p>跨平台评价聚合，AI辅助回复，提升商家互动率和好评率，构建品牌信任度</p>
+        <div class="feature-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          智能回复
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        使用流程
+      </div>
+      <h2 class="section-title">三步开启AI推荐优化</h2>
+      <p class="section-desc">简单三步，即可开始提升门店在AI搜索引擎中的推荐排名</p>
+    </div>
+    <div class="steps-container">
+      <div class="step-item animate-on-scroll">
+        <div class="step-connector"></div>
+        <div class="step-number">1</div>
+        <h3>注册门店</h3>
+        <p>填写门店基本信息，30秒完成注册，即刻开始AI推荐优化之旅</p>
+      </div>
+      <div class="step-item animate-on-scroll">
+        <div class="step-connector"></div>
+        <div class="step-number">2</div>
+        <h3>AI诊断</h3>
+        <p>智能分析门店AI推荐表现，九维度深度评估，生成专属优化方案</p>
+      </div>
+      <div class="step-item animate-on-scroll">
+        <div class="step-number">3</div>
+        <h3>持续优化</h3>
+        <p>执行AI建议，追踪排名变化，持续提升推荐指数，获取更多精准客户</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== DATA / RESULTS ========== -->
+<section class="section" id="data">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        效果数据
+      </div>
+      <h2 class="section-title">真实数据，看得见的增长</h2>
+      <p class="section-desc">来自真实商家的运营数据，GEO优化带来的效果立竿见影</p>
+    </div>
+    <div class="data-grid">
+      <div class="data-card animate-on-scroll">
+        <div class="data-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
+        <div class="data-value">46→82</div>
+        <div class="data-label">平均推荐指数提升</div>
+      </div>
+      <div class="data-card animate-on-scroll">
+        <div class="data-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="data-value">3-5公里</div>
+        <div class="data-label">精准客户触达范围</div>
+      </div>
+      <div class="data-card animate-on-scroll">
+        <div class="data-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </div>
+        <div class="data-value">78%</div>
+        <div class="data-label">商家好评率</div>
+      </div>
+      <div class="data-card animate-on-scroll">
+        <div class="data-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="data-value">&lt;24小时</div>
+        <div class="data-label">首次诊断出报告时间</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PRICING ========== -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <div class="section-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        定价方案
+      </div>
+      <h2 class="section-title">灵活定价，按需选择</h2>
+      <p class="section-desc">从免费版到企业版，满足不同规模商家的GEO优化需求</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Basic -->
+      <div class="pricing-card animate-on-scroll">
+        <div class="pricing-name">基础版</div>
+        <div class="pricing-desc">适合刚起步的本地商家</div>
+        <div class="pricing-price">
+          <div class="pricing-amount">¥0 <span>/月</span></div>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            AI诊断（3次/月）
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            基础排名监控
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            1家门店
+          </li>
+        </ul>
+        <a href="#cta" class="pricing-btn">免费开始</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card featured animate-on-scroll">
+        <div class="pricing-badge">最受欢迎</div>
+        <div class="pricing-name">专业版</div>
+        <div class="pricing-desc">适合追求增长的商家</div>
+        <div class="pricing-price">
+          <div class="pricing-amount">¥299 <span>/月</span></div>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            无限AI诊断
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            实时排名监控
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            AI内容生成
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            评价智能管理
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            5家门店
+          </li>
+        </ul>
+        <a href="#cta" class="pricing-btn">立即订阅</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card animate-on-scroll">
+        <div class="pricing-name">企业版</div>
+        <div class="pricing-desc">适合连锁品牌和企业</div>
+        <div class="pricing-price">
+          <div class="pricing-amount">¥899 <span>/月</span></div>
+        </div>
+        <ul class="pricing-features">
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            全部Pro功能
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            专属客户经理
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            行业定制方案
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            API接口
+          </li>
+          <li>
+            <div class="pricing-check">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            无限门店
+          </li>
+        </ul>
+        <a href="#cta" class="pricing-btn">联系销售</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CTA SECTION ========== -->
+<section class="cta-section" id="cta">
+  <div class="container">
+    <div class="cta-inner animate-on-scroll">
+      <h2>准备好让AI优先推荐你的门店了吗？</h2>
+      <p>立即免费注册，30秒开启GEO优化之旅</p>
+      <a href="#" class="btn-primary">
+        免费开始使用
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9 4m4 4L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo">
+          <div class="nav-logo-icon">G</div>
+          <div class="nav-logo-text"><span>GEO</span> 智能助手</div>
+        </a>
+        <p>GEO智能助手是雪蕊科技旗下产品，致力于帮助本地商家提升在AI搜索引擎中的推荐排名，精准获取潜在客户。</p>
+      </div>
+      <div class="footer-col">
+        <h4>产品</h4>
+        <a href="#features">产品功能</a>
+        <a href="#pricing">定价方案</a>
+        <a href="#data">客户案例</a>
+        <a href="#how">使用流程</a>
+      </div>
+      <div class="footer-col">
+        <h4>支持</h4>
+        <a href="#">帮助中心</a>
+        <a href="#">API文档</a>
+        <a href="#">更新日志</a>
+        <a href="#">系统状态</a>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <a href="#">关于我们</a>
+        <a href="#">联系我们</a>
+        <a href="#">隐私政策</a>
+        <a href="#">服务条款</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 GEO智能助手 &middot; 雪蕊科技</p>
+      <p>京ICP备XXXXXXXX号-1</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+// Navbar scroll effect
+const navbar = document.getElementById('navbar');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  if (scrollY > 20) {
+    navbar.classList.add('scrolled');
+  } else {
+    navbar.classList.remove('scrolled');
+  }
+  lastScroll = scrollY;
+}, { passive: true });
+
+// Mobile menu toggle
+const mobileToggle = document.getElementById('mobileToggle');
+const mobileMenu = document.getElementById('mobileMenu');
+mobileToggle.addEventListener('click', () => {
+  mobileToggle.classList.toggle('active');
+  mobileMenu.classList.toggle('active');
+});
+// Close mobile menu on link click
+mobileMenu.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    mobileToggle.classList.remove('active');
+    mobileMenu.classList.remove('active');
+  });
+});
+
+// Intersection Observer for scroll animations
+const observerOptions = {
+  root: null,
+  rootMargin: '0px 0px -60px 0px',
+  threshold: 0.1
+};
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, index) => {
+    if (entry.isIntersecting) {
+      // Add stagger delay based on sibling position
+      const parent = entry.target.parentElement;
+      const siblings = parent ? Array.from(parent.querySelectorAll('.animate-on-scroll')) : [];
+      const siblingIndex = siblings.indexOf(entry.target);
+      const delay = siblingIndex >= 0 ? siblingIndex * 100 : 0;
+
+      setTimeout(() => {
+        entry.target.classList.add('visible');
+      }, delay);
+      observer.unobserve(entry.target);
+    }
+  });
+}, observerOptions);
+
+document.querySelectorAll('.animate-on-scroll').forEach(el => {
+  observer.observe(el);
+});
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const href = this.getAttribute('href');
+    if (href === '#') return;
+    e.preventDefault();
+    const target = document.querySelector(href);
+    if (target) {
+      const navHeight = 72;
+      const targetPosition = target.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+    }
+  });
+});
+</script>
+</body>
+</html>
