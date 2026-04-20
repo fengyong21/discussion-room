@@ -520,6 +520,8 @@ function initRandomRoles() {
 
 // ─── HTML 页面 ────────────────────────────────────────────
 function getHTML(roomId) {
+  // 服务端初始化随机角色（这样 ROLES JSON 会包含所有角色）
+  initRandomRoles();
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -3395,9 +3397,9 @@ function renderEvoPanel(data) {
 }
 
 async function init() {
-  // 生成随机角色
-  initRandomRoles();
-  
+  // 角色已在服务端初始化（通过 ROLES JSON 传入）
+  activeRoles = Object.keys(ROLES).filter(function(k) { return ROLES[k].category !== 'system'; });
+
   // Init style
   setStyle('teahouse');
   renderStyleDropdown();
