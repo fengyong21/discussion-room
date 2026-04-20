@@ -669,7 +669,7 @@ body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;backgr
 .req-generating .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Guest panel */
-.guest-toggle{position:fixed;right:12px;bottom:80px;width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.guest-toggle{position:fixed;right:12px;bottom:130px;width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40;transition:all .2s;box-shadow:0 2px 12px rgba(0,0,0,.3)}
 .guest-toggle:hover{border-color:var(--style-color);color:var(--text)}
 .guest-panel{position:fixed;right:12px;bottom:130px;width:280px;max-height:400px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);z-index:40;display:none;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:msg-in .2s ease-out}
 .guest-panel.show{display:flex}
@@ -3662,15 +3662,16 @@ app.post('/api/chat', async (c) => {
           { role: 'system', content: system },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 500,
+        max_tokens: 2000,
       }),
     });
 
     const result = await response.json();
     let content = result.choices?.[0]?.message?.content || '';
 
-    // 清理 <think...</think 标签（qwq 等推理模型）
-    content = content.replace(/[\s\S]*?<\/think>\s*/g, '').trim();
+    // 清理 <think...</think 标签（推理模型）
+    const cleaned = content.replace(/[\s\S]*?<\/think>\s*/g, '').trim();
+    content = cleaned || content;
 
     return c.json({ content });
   } catch (e) {
