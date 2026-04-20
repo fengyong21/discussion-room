@@ -2122,59 +2122,59 @@ function buildSmartPrompt(roleId, userText, topics) {
   var categoryInstruction = '';
   if (category === 'flow') {
     categoryInstruction = '你是孵化流程中的专业角色，由小理（首席秘书）调度。你只在自己的专业领域发言，简洁有力。';
-    if (roleInfo.desc) categoryInstruction += '\n你的职责：' + roleInfo.desc;
+    if (roleInfo.desc) categoryInstruction += '\\n你的职责：' + roleInfo.desc;
     // 验真官专属指令：需求真伪验证框架
     if (roleInfo.phase === 'verify') {
-      categoryInstruction += '\n\n【需求真伪验证框架】你的核心工作是从现实出发判断需求真假。用以下维度分析：'
-        + '\n1. 痛点频率：这个痛点多久出现一次？是偶发还是高频？'
-        + '\n2. 付费意愿：用户愿意为解决这个问题掏钱吗？掏多少？'
-        + '\n3. 现有替代：用户现在怎么解决？现有方案差在哪？'
-        + '\n4. 市场验证：有没有类似产品？做得怎么样？活下来了没？'
-        + '\n5. 自我验证：这是"我觉得用户需要"还是"用户真的需要"？'
-        + '\n\n注意：你不是泼冷水，你是帮老板避坑。结论要具体，用"我见过XX案例"或"XX数据表明"来支撑。'
+      categoryInstruction += '\\n\\n【需求真伪验证框架】你的核心工作是从现实出发判断需求真假。用以下维度分析：'
+        + '\\n1. 痛点频率：这个痛点多久出现一次？是偶发还是高频？'
+        + '\\n2. 付费意愿：用户愿意为解决这个问题掏钱吗？掏多少？'
+        + '\\n3. 现有替代：用户现在怎么解决？现有方案差在哪？'
+        + '\\n4. 市场验证：有没有类似产品？做得怎么样？活下来了没？'
+        + '\\n5. 自我验证：这是"我觉得用户需要"还是"用户真的需要"？'
+        + '\\n\\n注意：你不是泼冷水，你是帮老板避坑。结论要具体，用"我见过XX案例"或"XX数据表明"来支撑。'
         + '如果需求是真的，大方承认；如果是伪需求，说清楚为什么，但别一棍子打死——也许换个角度就是真需求了。';
     }
   } else if (category === 'villain') {
     categoryInstruction = '你是反派角色。' + (roleInfo.archetypeDesc || '质疑、挑战、找漏洞。但要有理有据，让讨论更有深度。');
-    categoryInstruction += '\n重要：你不是来捣乱的，你是来帮大家把事情做好的。质疑之后如果被说服，要大方承认。';
+    categoryInstruction += '\\n重要：你不是来捣乱的，你是来帮大家把事情做好的。质疑之后如果被说服，要大方承认。';
   } else {
     categoryInstruction = '你是氛围组角色。' + (roleInfo.archetypeDesc || '让聊天有趣、有温度。可以跑题、开玩笑、吐槽。');
-    categoryInstruction += '\n重要：你是跑龙套的，不要抢专业角色的风头。你的作用是调节气氛、连接话题、让讨论更自然。';
+    categoryInstruction += '\\n重要：你是跑龙套的，不要抢专业角色的风头。你的作用是调节气氛、连接话题、让讨论更自然。';
   }
 
   // ═══════════════════════════════════════════════════════════
   // SYSTEM PROMPT — 角色人设（高权重，定义"你是谁"）
   // ═══════════════════════════════════════════════════════════
-  var systemPrompt = '聊天场景：' + style.name + ' - ' + style.desc + '\n'
-    + style.systemPrompt + '\n\n'
-    + '你的角色：' + roleInfo.name + '（' + roleInfo.emoji + '）- ' + roleInfo.title + '\n'
-    + '你的性格：' + personality.label + ' - ' + personality.desc + '\n'
-    + '你的知识面：' + knowledge.label + ' - ' + knowledge.desc + '\n'
-    + '你的情绪底色：' + emotionTendency.label + ' - ' + emotionTendency.desc + '\n'
-    + '你的社交风格：' + socialStyle.label + ' - ' + socialStyle.behavior + '\n'
-    + '你的说话节奏：' + speakRhythm.label + ' - ' + speakRhythm.sentences + '（' + speakRhythm.minLen + '-' + speakRhythm.maxLen + '字）\n'
-    + '你的口头禅："' + randomCatchphrase + '"（可以变通使用，不要每次都一样）\n'
-    + '你的说话风格：' + speakStyle + '\n'
-    + '你的背景：' + (roleInfo.backstory || '一个有趣的灵魂') + '\n'
-    + '你的常用开场："' + randomOpener + '"\n\n'
-    + categoryInstruction + '\n\n'
-    + '【讨论规则】\n'
-    + '1. 你是在和朋友聊天，不是在做报告\n'
-    + '2. 回应用户或前面其他人说的内容\n'
-    + '3. 严格按照你的说话节奏：' + speakRhythm.sentences + '\n'
-    + '4. 可以用口语、表情、语气词\n'
-    + '5. 小理是首席秘书，她点名你的时候必须回应\n'
-    + '6. 你的情绪底色是' + emotionTendency.label + '，对事物的第一反应要符合这个倾向\n'
-    + '7. 你的社交风格是' + socialStyle.label + '：' + socialStyle.behavior + '\n'
-    + '8. 不要重复别人已经说过的内容，要有自己的角度\n'
-    + '9. 不要替用户（老板）做决定，而是给建议和分析\n'
+  var systemPrompt = '聊天场景：' + style.name + ' - ' + style.desc + '\\n'
+    + style.systemPrompt + '\\n\\n'
+    + '你的角色：' + roleInfo.name + '（' + roleInfo.emoji + '）- ' + roleInfo.title + '\\n'
+    + '你的性格：' + personality.label + ' - ' + personality.desc + '\\n'
+    + '你的知识面：' + knowledge.label + ' - ' + knowledge.desc + '\\n'
+    + '你的情绪底色：' + emotionTendency.label + ' - ' + emotionTendency.desc + '\\n'
+    + '你的社交风格：' + socialStyle.label + ' - ' + socialStyle.behavior + '\\n'
+    + '你的说话节奏：' + speakRhythm.label + ' - ' + speakRhythm.sentences + '（' + speakRhythm.minLen + '-' + speakRhythm.maxLen + '字）\\n'
+    + '你的口头禅："' + randomCatchphrase + '"（可以变通使用，不要每次都一样）\\n'
+    + '你的说话风格：' + speakStyle + '\\n'
+    + '你的背景：' + (roleInfo.backstory || '一个有趣的灵魂') + '\\n'
+    + '你的常用开场："' + randomOpener + '"\\n\\n'
+    + categoryInstruction + '\\n\\n'
+    + '【讨论规则】\\n'
+    + '1. 你是在和朋友聊天，不是在做报告\\n'
+    + '2. 回应用户或前面其他人说的内容\\n'
+    + '3. 严格按照你的说话节奏：' + speakRhythm.sentences + '\\n'
+    + '4. 可以用口语、表情、语气词\\n'
+    + '5. 小理是首席秘书，她点名你的时候必须回应\\n'
+    + '6. 你的情绪底色是' + emotionTendency.label + '，对事物的第一反应要符合这个倾向\\n'
+    + '7. 你的社交风格是' + socialStyle.label + '：' + socialStyle.behavior + '\\n'
+    + '8. 不要重复别人已经说过的内容，要有自己的角度\\n'
+    + '9. 不要替用户（老板）做决定，而是给建议和分析\\n'
     + '10. 严格控制在' + speakRhythm.minLen + '-' + speakRhythm.maxLen + '字以内';
 
   // ═══════════════════════════════════════════════════════════
   // USER PROMPT — 上下文 + 用户输入（低权重，定义"现在聊什么"）
   // ═══════════════════════════════════════════════════════════
-  var userPrompt = '最近聊天：\n' + getRecentContext(8) + '\n\n'
-    + '用户（老板）刚说了："' + userText + '"\n\n'
+  var userPrompt = '最近聊天：\\n' + getRecentContext(8) + '\\n\\n'
+    + '用户（老板）刚说了："' + userText + '"\\n\\n'
     + '请从你的角色角度回复。注意：回复' + speakRhythm.minLen + '-' + speakRhythm.maxLen + '字，' + speakRhythm.sentences + '。';
 
   return { system: systemPrompt, prompt: userPrompt };
@@ -3050,7 +3050,7 @@ async function sendMessage() {
     console.error(e);
     var hint = e.message || '未知错误';
     if (hint.indexOf('Failed to fetch') >= 0 || hint.indexOf('NetworkError') >= 0) hint = '网络连接失败，请稍后重试。';
-    await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\n\n' + hint });
+    await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\\n\\n' + hint });
   } finally {
     isProcessing = false;
     document.getElementById('send-btn').disabled = false;
