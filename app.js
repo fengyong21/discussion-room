@@ -3073,12 +3073,13 @@ async function sendMessage() {
 
   var msg = { type: 'user', text: text, name: myName || '用户' };
   renderUserMessage(text, msg.name, true);
-  await sendToServer(msg);
 
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
-  showTyping('正在唤醒角色...');
+  showTyping('正在发送消息...');
   try {
+    await sendToServer(msg);
+    showTyping('正在唤醒角色...');
     await Promise.race([
       scheduleResponse(text),
       new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 30000))
