@@ -2562,9 +2562,9 @@ function renderFileMessage(m, isMe) {
   // 下载按钮
   if (m.base64) {
     cardHtml += '<div class="file-card-actions">';
-    cardHtml += '<button onclick="downloadFile(\'' + m.id + '\')">⬇ 下载</button>';
+    cardHtml += '<button onclick="downloadFile(&apos;' + m.id + '&apos;)">⬇ 下载</button>';
     if (m.textContent !== null && m.textContent !== undefined) {
-      cardHtml += '<button onclick="analyzeFile(\'' + m.id + '\')" id="analyze-btn-' + m.id + '">🔍 AI分析</button>';
+      cardHtml += '<button onclick="analyzeFile(&apos;' + m.id + '&apos;)" id="analyze-btn-' + m.id + '">🔍 AI分析</button>';
     }
     cardHtml += '</div>';
   }
