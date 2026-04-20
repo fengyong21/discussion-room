@@ -524,6 +524,9 @@ function getHTML(roomId) {
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>朋友茶话会 · 创意孵化</title>
 <style>
@@ -837,6 +840,15 @@ var MIN_ROLES = 2;
 var MAX_ROLES = 8;
 var DEFAULT_ROLE_COUNT = 4;
 var messageHistory = [];
+
+// 带超时的 fetch，防止请求永远挂起
+function fetchTimeout(url, options, timeout) {
+  timeout = timeout || 10000;
+  return Promise.race([
+    fetch(url, options),
+    new Promise(function(_, reject) { setTimeout(function() { reject(new Error('请求超时')); }, timeout); })
+  ]);
+}
 var displayedMsgIds = {};
 
 // ═══════════════════════════════════════════════════════════
@@ -2590,7 +2602,7 @@ async function analyzeFile(msgId) {
     btn.innerHTML = '<span class="file-analyzing">分析中</span>';
   }
   try {
-    var resp = await fetch('/room/' + ROOM_ID + '/analyze', {
+    var resp = await fetchTimeout('/room/' + ROOM_ID + '/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileName: f.fileName, textContent: f.textContent })
@@ -2624,7 +2636,7 @@ async function handleFileUpload(event) {
     formData.append('file', file);
     formData.append('name', myName || '用户');
 
-    var resp = await fetch('/room/' + ROOM_ID + '/upload', {
+    var resp = await fetchTimeout('/room/' + ROOM_ID + '/upload', {
       method: 'POST',
       body: formData
     });
@@ -2636,7 +2648,7 @@ async function handleFileUpload(event) {
     if (hints.length > 0) hints[hints.length - 1].remove();
 
     // 获取刚上传的文件消息
-    var pollResp = await fetch('/room/' + ROOM_ID + '/poll?after=' + (data.id - 1));
+    var pollResp = await fetchTimeout('/room/' + ROOM_ID + '/poll?after=' + (data.id - 1));
     var pollData = await pollResp.json();
     if (pollData.messages) {
       for (var i = 0; i < pollData.messages.length; i++) {
@@ -2719,7 +2731,7 @@ async function quickAtRole(roleId, roleName) {
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
   try {
-    await scheduleResponse(atText);
+    await Promise.race([scheduleResponse(atText), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]);
   } catch(e) {
     console.error(e);
   }
@@ -2815,7 +2827,7 @@ function toggleGuest(roleId) {
 async function sendToServer(msg) {
   msg.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   try {
-    await fetch('/room/' + ROOM_ID + '/send', {
+    await fetchTimeout('/room/' + ROOM_ID + '/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(msg)
@@ -2828,11 +2840,11 @@ async function sendToServer(msg) {
 }
 
 async function callAI(roleId, prompt, systemPrompt) {
-  var resp = await fetch('/api/chat', {
+  var resp = await fetchTimeout('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role: roleId, system: systemPrompt || '你是' + (ROLES[roleId]?.name || roleId) + '。用中文回复。', prompt: prompt })
-  });
+  }, 30000);
   if (!resp.ok) { var e = await resp.text(); throw new Error('AI错误 ' + resp.status + ': ' + e); }
   var data = await resp.json();
   return data.content;
@@ -2862,7 +2874,7 @@ document.addEventListener('visibilitychange', function() {
 async function pollMessages() {
   try {
     var newMsgCount = 0;
-    var resp = await fetch('/room/' + ROOM_ID + '/poll?after=' + lastMsgId);
+    var resp = await fetchTimeout('/room/' + ROOM_ID + '/poll?after=' + lastMsgId);
     var data = await resp.json();
 
     if (data.messages && data.messages.length > 0) {
@@ -2882,7 +2894,7 @@ async function pollMessages() {
                 if (!isProcessing) {
                   isProcessing = true;
                   document.getElementById('send-btn').disabled = true;
-                  scheduleResponse(m.text).then(function() {
+                  Promise.race([scheduleResponse(m.text), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]).then(function() {
                     isProcessing = false;
                     document.getElementById('send-btn').disabled = false;
                   }).catch(function() {
@@ -2961,7 +2973,7 @@ async function doJoin() {
   renderRolesBar();
 
   try {
-    var resp = await fetch('/room/' + ROOM_ID + '/join', {
+    var resp = await fetchTimeout('/room/' + ROOM_ID + '/join', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name, color: MY_COLOR, activeRoles: activeRoles })
@@ -3238,7 +3250,7 @@ function toggleEvoPanel() {
 
 async function refreshEvoPanel() {
   try {
-    var resp = await fetch('/room/' + ROOM_ID + '/evolution');
+    var resp = await fetchTimeout('/room/' + ROOM_ID + '/evolution');
     var data = await resp.json();
     renderEvoPanel(data);
   } catch(e) { console.error('Evo panel error:', e); }
@@ -3341,13 +3353,13 @@ async function init() {
 
   // Load room data
   try {
-    var resp = await fetch('/room/' + ROOM_ID + '/info');
+    var resp = await fetchTimeout('/room/' + ROOM_ID + '/info');
     var data = await resp.json();
 
     if (data.members && data.members.length > 0 && !data.members.find(function(m) { return m.name === myName; })) {
       if (myName) {
         if (data.activeRoles && data.activeRoles.length > 0) activeRoles = data.activeRoles;
-        await fetch('/room/' + ROOM_ID + '/join', {
+        await fetchTimeout('/room/' + ROOM_ID + '/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: myName, color: MY_COLOR, activeRoles: activeRoles })
@@ -3363,7 +3375,7 @@ async function init() {
     } else if (data.messages && data.messages.length > 0) {
       loadRoomData(data);
       if (myName) {
-        await fetch('/room/' + ROOM_ID + '/join', {
+        await fetchTimeout('/room/' + ROOM_ID + '/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: myName, color: MY_COLOR, activeRoles: activeRoles })
@@ -3380,7 +3392,7 @@ async function init() {
       }, 300);
 
       if (myName) {
-        await fetch('/room/' + ROOM_ID + '/join', {
+        await fetchTimeout('/room/' + ROOM_ID + '/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: myName, color: MY_COLOR, activeRoles: activeRoles })
@@ -3626,7 +3638,7 @@ app.post('/room/:roomId/analyze', async (c) => {
 // 房间首页
 app.get('/room/:roomId', (c) => {
   const roomId = c.req.param('roomId');
-  return c.html(getHTML(roomId));
+  return c.html(getHTML(roomId), 200, { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' });
 });
 
 // AI 聊天 API（OpenAI 兼容格式）
