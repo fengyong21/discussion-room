@@ -3395,8 +3395,8 @@ function renderEvoPanel(data) {
 }
 
 async function init() {
-  // 角色已在服务端初始化（通过 ROLES JSON 传入）
-  activeRoles = Object.keys(ROLES).filter(function(k) { return ROLES[k].category !== 'system'; });
+  // 使用服务端传入的固定角色（不生成随机角色）
+  activeRoles = Object.keys(ROLES).filter(function(k) { return ROLES[k] && ROLES[k].category === 'flow'; });
 
   // Init style
   setStyle('teahouse');
@@ -3693,10 +3693,6 @@ app.post('/room/:roomId/analyze', async (c) => {
 // 房间首页
 app.get('/room/:roomId', (c) => {
   const roomId = c.req.param('roomId');
-  // 每次请求重新生成随机角色
-  // 先清除之前添加的随机角色
-  Object.keys(ROLES).forEach(k => { if (ROLES[k].category === 'mood' || ROLES[k].category === 'villain' || k.startsWith('gen_')) delete ROLES[k]; });
-  initRandomRoles();
   return c.html(getHTML(roomId), 200, { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' });
 });
 
