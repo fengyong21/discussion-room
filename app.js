@@ -580,6 +580,9 @@ body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;backgr
 .typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--text2);animation:typing-bounce 1.4s infinite}
 .typing-dots span:nth-child(2){animation-delay:.2s}
 .typing-dots span:nth-child(3){animation-delay:.4s}
+.typing-status{font-size:12px;color:var(--text2);padding:0 4px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.typing-status.error{color:#ff6b6b}
+.typing-status.success{color:#51cf66}
 @keyframes typing-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
 .input-area{padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--border)}
 .input-row{display:flex;gap:10px;align-items:flex-end}
@@ -769,6 +772,7 @@ body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;backgr
   <div class="chat-area" id="chat-area"></div>
   <div class="typing-indicator" id="typing-indicator">
     <div class="typing-dots"><span></span><span></span><span></span></div>
+    <div class="typing-status" id="typing-status"></div>
   </div>
   <div class="input-area">
     <div class="input-row">
@@ -2287,6 +2291,7 @@ async function scheduleResponse(userText) {
 
   // Step 4: Detect topics
   var topics = detectTopics(userText);
+  showTyping('正在分析话题...');
 
   // Step 5: Select speakers（算法调度）
   var speakers = selectSpeakers(topics, currentStyle, userText);
@@ -2307,7 +2312,7 @@ async function scheduleResponse(userText) {
     var speaker = speakers[i];
     // Highlight speaking role in roles-bar
     highlightRole(speaker);
-    showTyping();
+    showTyping(ROLES[speaker].name + ' 正在思考...');
     try {
       var prompt, sysPrompt;
       if (speaker === 'li') {
@@ -2318,12 +2323,20 @@ async function scheduleResponse(userText) {
         sysPrompt = result.system;
         prompt = result.prompt;
       }
+      showTyping(ROLES[speaker].name + ' 正在回复...');
       var response = await callAI(speaker, prompt, sysPrompt);
       hideTyping();
+      if (!response || !response.trim()) {
+        showTyping(ROLES[speaker].name + ' 返回为空，跳过');
+        await sleep(1000);
+        continue;
+      }
       await sendToServer({ type: 'ai', role: speaker, text: response });
       collectRequirementData(response, topics, speaker);
       lastSpeakerIds.push(speaker); // 记录本轮发言角色
     } catch(e) {
+      showTyping('❌ ' + ROLES[speaker].name + ' 出错: ' + (e.message || '未知'));
+      await sleep(2000);
       hideTyping();
       console.error('AI error for ' + speaker + ':', e);
     }
@@ -2668,8 +2681,26 @@ async function handleFileUpload(event) {
   }
 }
 
-function showTyping() { document.getElementById('typing-indicator').classList.add('show'); }
-function hideTyping() { document.getElementById('typing-indicator').classList.remove('show'); }
+function showTyping(text) {
+  var el = document.getElementById('typing-indicator');
+  var st = document.getElementById('typing-status');
+  el.classList.add('show');
+  st.className = 'typing-status';
+  st.textContent = text || '';
+}
+function hideTyping() {
+  var el = document.getElementById('typing-indicator');
+  var st = document.getElementById('typing-status');
+  el.classList.remove('show');
+  st.className = 'typing-status';
+  st.textContent = '';
+}
+function flashStatus(text, type) {
+  var st = document.getElementById('typing-status');
+  st.className = 'typing-status ' + (type || '');
+  st.textContent = text || '';
+  if (!type) setTimeout(hideTyping, 2000);
+}
 
 // ═══════════════════════════════════════════════════════════
 // 10. ROLES BAR & GUEST PANEL
@@ -2730,7 +2761,7 @@ async function quickAtRole(roleId, roleName) {
   // 触发 AI 回复
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
-  showTyping();
+  showTyping(ROLES[roleId].name + ' 正在思考...');
   try {
     await Promise.race([scheduleResponse(atText), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]);
   } catch(e) {
@@ -2896,7 +2927,7 @@ async function pollMessages() {
                 if (!isProcessing) {
                   isProcessing = true;
                   document.getElementById('send-btn').disabled = true;
-                  showTyping();
+                  showTyping(ROLES[m.role].name + ' 正在回复...');
                   Promise.race([scheduleResponse(m.text), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]).then(function() {
                     isProcessing = false;
                     document.getElementById('send-btn').disabled = false;
@@ -3046,7 +3077,7 @@ async function sendMessage() {
 
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
-  showTyping();
+  showTyping('正在唤醒角色...');
   try {
     await Promise.race([
       scheduleResponse(text),
@@ -3056,6 +3087,7 @@ async function sendMessage() {
     console.error(e);
     var hint = e.message || '未知错误';
     if (hint.indexOf('Failed to fetch') >= 0 || hint.indexOf('NetworkError') >= 0) hint = '网络连接失败，请稍后重试。';
+    showTyping('❌ ' + hint);
     await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\\n\\n' + hint });
   } finally {
     isProcessing = false;
