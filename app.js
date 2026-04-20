@@ -2730,6 +2730,7 @@ async function quickAtRole(roleId, roleName) {
   // 触发 AI 回复
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
+  showTyping();
   try {
     await Promise.race([scheduleResponse(atText), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]);
   } catch(e) {
@@ -2737,6 +2738,7 @@ async function quickAtRole(roleId, roleName) {
   }
   isProcessing = false;
   document.getElementById('send-btn').disabled = false;
+  hideTyping();
 }
 
 function renderRoleSelectPanel() {
@@ -2894,12 +2896,15 @@ async function pollMessages() {
                 if (!isProcessing) {
                   isProcessing = true;
                   document.getElementById('send-btn').disabled = true;
+                  showTyping();
                   Promise.race([scheduleResponse(m.text), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]).then(function() {
                     isProcessing = false;
                     document.getElementById('send-btn').disabled = false;
+                    hideTyping();
                   }).catch(function() {
                     isProcessing = false;
                     document.getElementById('send-btn').disabled = false;
+                    hideTyping();
                   });
                 }
               }, 2000);
@@ -3041,6 +3046,7 @@ async function sendMessage() {
 
   isProcessing = true;
   document.getElementById('send-btn').disabled = true;
+  showTyping();
   try {
     await Promise.race([
       scheduleResponse(text),
@@ -3054,6 +3060,7 @@ async function sendMessage() {
   } finally {
     isProcessing = false;
     document.getElementById('send-btn').disabled = false;
+    hideTyping();
   }
 }
 
