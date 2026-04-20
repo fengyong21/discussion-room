@@ -520,8 +520,6 @@ function initRandomRoles() {
 
 // ─── HTML 页面 ────────────────────────────────────────────
 function getHTML(roomId) {
-  // 服务端初始化随机角色（这样 ROLES JSON 会包含所有角色）
-  initRandomRoles();
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -3695,6 +3693,10 @@ app.post('/room/:roomId/analyze', async (c) => {
 // 房间首页
 app.get('/room/:roomId', (c) => {
   const roomId = c.req.param('roomId');
+  // 每次请求重新生成随机角色
+  // 先清除之前添加的随机角色
+  Object.keys(ROLES).forEach(k => { if (ROLES[k].category === 'mood' || ROLES[k].category === 'villain' || k.startsWith('gen_')) delete ROLES[k]; });
+  initRandomRoles();
   return c.html(getHTML(roomId), 200, { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' });
 });
 
