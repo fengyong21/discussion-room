@@ -1811,7 +1811,7 @@ function renderStyleDropdown() {
   for (var key in STYLES) {
     var s = STYLES[key];
     var isActive = key === currentStyle ? ' active' : '';
-    html += '<div class="style-option' + isActive + '" onclick="setStyle(\\'' + key + '\\')">';
+    html += '<div class="style-option' + isActive + '" onclick="setStyle(&apos;' + key + '&apos;)">';
     html += '<span class="so-emoji">' + s.emoji + '</span>';
     html += '<div class="so-info"><div class="so-name">' + s.name + '</div><div class="so-desc">' + s.desc + '</div></div>';
     html += '</div>';
@@ -2475,8 +2475,8 @@ function renderAIMessage(roleId, text, msgId) {
   msg.setAttribute('data-msg-id', id);
   msg.innerHTML = '<div class="msg-avatar" style="background:' + r.color + '22;color:' + r.color + '">' + r.emoji + '</div><div><div class="msg-name" style="color:' + r.color + '">' + r.name + ' · ' + r.title + '</div><div class="msg-bubble">' + formatText(text) + '</div>'
     + '<div class="msg-feedback">'
-    + '<button onclick="submitFeedback(\'' + roleId + '\',' + id + ',\'positive\',this)" title="说得好">👍</button>'
-    + '<button onclick="submitFeedback(\'' + roleId + '\',' + id + ',\'negative\',this)" title="不太行">👎</button>'
+    + '<button onclick="submitFeedback(&apos;' + roleId + '&apos;,' + id + ',&apos;positive&apos;,this)" title="说得好">👍</button>'
+    + '<button onclick="submitFeedback(&apos;' + roleId + '&apos;,' + id + ',&apos;negative&apos;,this)" title="不太行">👎</button>'
     + '</div></div>';
   area.appendChild(msg);
   area.scrollTop = area.scrollHeight;
@@ -2796,7 +2796,7 @@ function renderGuestPanel() {
     var id = keys[i];
     var r = ROLES[id];
     var inRoom = activeRoles.indexOf(id) >= 0;
-    html += '<div class="guest-item' + (inRoom ? ' in-room' : '') + '" onclick="toggleGuest(\\'' + id + '\\')">';
+    html += '<div class="guest-item' + (inRoom ? ' in-room' : '') + '" onclick="toggleGuest(&apos;' + id + '&apos;)">';
     html += '<span class="gi-emoji">' + r.emoji + '</span>';
     html += '<div class="gi-info"><div class="gi-name">' + r.name + '</div><div class="gi-title">' + r.title + '</div></div>';
     html += (inRoom ? '<span class="gi-check">✓</span>' : '');
