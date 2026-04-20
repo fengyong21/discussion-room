@@ -840,6 +840,24 @@ var pollInterval = 2000;
 var emptyPollCount = 0;
 var activeRoles = ['li'];
 var isProcessing = false;
+var isProcessingTimer = null;
+
+function safeSetProcessing(val) {
+  isProcessing = val;
+  var btn = document.getElementById('send-btn');
+  if (btn) btn.disabled = val;
+  if (val) {
+    clearTimeout(isProcessingTimer);
+    isProcessingTimer = setTimeout(function() {
+      console.warn('[safeSetProcessing] isProcessing stuck for 60s, auto-reset');
+      isProcessing = false;
+      if (btn) btn.disabled = false;
+      hideTyping();
+    }, 60000);
+  } else {
+    clearTimeout(isProcessingTimer);
+  }
+}
 var MIN_ROLES = 2;
 var MAX_ROLES = 8;
 var DEFAULT_ROLE_COUNT = 4;
@@ -2759,16 +2777,14 @@ async function quickAtRole(roleId, roleName) {
   renderUserMessage(atText, msg.name, true);
   await sendToServer(msg);
   // 触发 AI 回复
-  isProcessing = true;
-  document.getElementById('send-btn').disabled = true;
+  safeSetProcessing(true);
   showTyping(ROLES[roleId].name + ' 正在思考...');
   try {
     await Promise.race([scheduleResponse(atText), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]);
   } catch(e) {
     console.error(e);
   }
-  isProcessing = false;
-  document.getElementById('send-btn').disabled = false;
+  safeSetProcessing(false);
   hideTyping();
 }
 
@@ -2925,16 +2941,13 @@ async function pollMessages() {
               window._otherUserTimer = setTimeout(function() {
                 window._otherUserTimer = null;
                 if (!isProcessing) {
-                  isProcessing = true;
-                  document.getElementById('send-btn').disabled = true;
+                  safeSetProcessing(true);
                   showTyping(ROLES[m.role].name + ' 正在回复...');
                   Promise.race([scheduleResponse(m.text), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]).then(function() {
-                    isProcessing = false;
-                    document.getElementById('send-btn').disabled = false;
+                    safeSetProcessing(false);
                     hideTyping();
                   }).catch(function() {
-                    isProcessing = false;
-                    document.getElementById('send-btn').disabled = false;
+                    safeSetProcessing(false);
                     hideTyping();
                   });
                 }
@@ -3060,7 +3073,11 @@ async function sendMessage() {
   var input = document.getElementById('user-input');
   var text = input.value.trim();
   if (!text) return;
-  if (isProcessing) { console.log('[sendMessage] isProcessing=true, skipping'); return; }
+  if (isProcessing) {
+    showTyping('⏳ 上一条消息还在处理中，请稍候...');
+    setTimeout(hideTyping, 2000);
+    return;
+  }
   if (text.length > 500) {
     text = text.substring(0, 500);
     // 显示提示
@@ -3074,8 +3091,7 @@ async function sendMessage() {
   var msg = { type: 'user', text: text, name: myName || '用户' };
   renderUserMessage(text, msg.name, true);
 
-  isProcessing = true;
-  document.getElementById('send-btn').disabled = true;
+  safeSetProcessing(true);
   showTyping('正在发送消息...');
   try {
     await sendToServer(msg);
@@ -3091,8 +3107,7 @@ async function sendMessage() {
     showTyping('❌ ' + hint);
     await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\\n\\n' + hint });
   } finally {
-    isProcessing = false;
-    document.getElementById('send-btn').disabled = false;
+    safeSetProcessing(false);
     hideTyping();
   }
 }
