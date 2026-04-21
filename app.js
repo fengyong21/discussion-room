@@ -831,7 +831,7 @@ body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;backgr
 <script>
 var ROOM_ID = '${roomId}';
 var ROLES = ${JSON.stringify(ROLES)};
-// 注入服务端常量到浏览器端
+// 注入服务端常量到浏览器端（这些常量定义在 <script> 外面）
 var PERSONALITIES = ${JSON.stringify(PERSONALITIES)};
 var CATCHPHRASES = ${JSON.stringify(CATCHPHRASES)};
 var SPEAK_STYLES = ${JSON.stringify(SPEAK_STYLES)};
@@ -845,26 +845,12 @@ var BACKSTORIES = ${JSON.stringify(BACKSTORIES)};
 var MOOD_ARCHETYPES = ${JSON.stringify(MOOD_ARCHETYPES)};
 var VILLAIN_ARCHETYPES = ${JSON.stringify(VILLAIN_ARCHETYPES)};
 var INDUSTRIES = ${JSON.stringify(INDUSTRIES)};
-var NEW_IDEA_KEYWORDS = ${JSON.stringify(NEW_IDEA_KEYWORDS)};
-var FAKE_DEMAND_SIGNALS = ${JSON.stringify(FAKE_DEMAND_SIGNALS)};
-var TOPIC_KEYWORDS = ${JSON.stringify(TOPIC_KEYWORDS)};
-var TOPIC_ROLE_MAP = ${JSON.stringify(TOPIC_ROLE_MAP)};
-var FLOW_PHASES = ${JSON.stringify(FLOW_PHASES)};
-var myIndustry = 'general';
+var myIndustry = '${myIndustry || "general"}';
 var generatedRoleCount = 0;
 var currentRoomId = ROOM_ID;
-// 注入服务端函数到浏览器端
+// 注入服务端独有函数到浏览器端
 ${detectIndustry.toString()}
 ${updateFlowRolesDisplay.toString()}
-${detectNewIdea.toString()}
-${detectFakeDemand.toString()}
-${updateUserProfile.toString()}
-${detectTopics.toString()}
-${detectDataType.toString()}
-${collectRequirementData.toString()}
-${shuffle.toString()}
-${selectSpeakers.toString()}
-${getActiveByCategory.toString()}
 var MY_COLOR = '#' + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
 var myName = '';
 var lastMsgId = 0;
