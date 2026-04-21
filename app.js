@@ -1807,7 +1807,7 @@ var STYLES = {
     desc: '像老朋友在茶馆聊天',
     systemPrompt: '你们是一群老朋友在茶馆喝茶聊天。氛围轻松随意，经常跑题又拉回来。有人吹牛有人吐槽有人认真。不要像开会，要像真实的朋友群聊。',
     turnPattern: 'random',
-    maxRolesPerTurn: 4,
+    maxRolesPerTurn: 2,
     triggerChance: 0.9,
     color: '#4ecdc4'
   },
@@ -1817,7 +1817,7 @@ var STYLES = {
     desc: '你是一个冒险故事的主角',
     systemPrompt: '这是一个冒险故事。用户是主角，其他角色是NPC。通过对话推进剧情，每个NPC有自己的性格和秘密。用"【系统】"标注场景变化。',
     turnPattern: 'host',
-    maxRolesPerTurn: 3,
+    maxRolesPerTurn: 2,
     triggerChance: 0.9,
     color: '#a78bfa'
   },
@@ -1827,7 +1827,7 @@ var STYLES = {
     desc: '像播客节目一样聊',
     systemPrompt: '这是一个轻松的播客节目。几个常驻嘉宾在聊天，用户是特邀嘉宾。主持人（小理）负责引导话题，嘉宾们互相接话、开玩笑。像真正的播客一样自然。',
     turnPattern: 'sequential',
-    maxRolesPerTurn: 5,
+    maxRolesPerTurn: 2,
     triggerChance: 0.95,
     color: '#f97316'
   }
@@ -2030,7 +2030,7 @@ function selectSpeakers(topics, style, userText) {
 
   // 按权重排序，取 top N
   candidates.sort(function(a, b) { return b.score - a.score; });
-  var maxSlots = isIdle ? 3 : styleObj.maxRolesPerTurn;
+  var maxSlots = isIdle ? 2 : styleObj.maxRolesPerTurn;
   var selected = candidates.slice(0, maxSlots);
 
   // 组装最终列表：@mention 锁定的 + 算法选出的
@@ -2379,7 +2379,7 @@ async function scheduleResponse(userText) {
       console.error('AI error for ' + speaker + ':', e);
     }
     unhighlightRole(speaker);
-    await sleep(300 + Math.floor(Math.random() * 700));
+    await sleep(100 + Math.floor(Math.random() * 200));
   }
 
   // Step 7: Collect requirement data
