@@ -2715,28 +2715,23 @@ async function handleFileUpload(event) {
       }
     }
 
-    // 上传成功后自动触发 AI 回复
-    if (uploadedFile && !isProcessing) {
-      safeSetProcessing(true);
+    // 上传成功后异步触发 AI 回复（不阻塞 UI）
+    if (uploadedFile) {
       var fileHint = '用户上传了文件「' + (uploadedFile.fileName || '未知文件') + '」';
       if (uploadedFile.textContent) {
         fileHint += '，内容摘要：' + uploadedFile.textContent.substring(0, 200);
       }
       showTyping('正在分析文件...');
-      try {
-        await Promise.race([
-          scheduleResponse(fileHint),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 60000))
-        ]);
-      } catch(e) {
+      // 不锁 UI，后台异步处理
+      Promise.race([
+        scheduleResponse(fileHint),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 15000))
+      ]).then(function() {
+        hideTyping();
+      }).catch(function(e) {
         console.error('File AI error:', e);
-        showTyping('❌ 文件分析失败: ' + (e.message || '未知'));
-        await sleep(2000);
         hideTyping();
-      } finally {
-        safeSetProcessing(false);
-        hideTyping();
-      }
+      });
     }
   } catch(e) {
     var hints = document.querySelectorAll('.msg.system');
