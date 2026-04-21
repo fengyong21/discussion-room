@@ -12,7 +12,7 @@ import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 
 const AI_MODEL = process.env.AI_MODEL || 'qwen/qwq-32b';
-const API_BASE = (process.env.API_BASE || 'https://api.openai.com').replace(/\/$/, '');
+const API_BASE = (process.env.API_BASE || 'https://api.openai.com').replace(/\/+$/, '').replace(/\/v1$/, '');
 const API_KEY = process.env.API_KEY || '';
 
 const ROLES = {
