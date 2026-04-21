@@ -2513,7 +2513,7 @@ function renderUserMessage(text, name, isMe) {
     msg.innerHTML = '<div class="msg-name" style="color:' + (isMe ? MY_COLOR : 'var(--text2)') + '">' + escapeHtml(name) + '</div>' + msg.innerHTML;
   }
   area.appendChild(msg);
-  area.scrollTop = area.scrollHeight;
+  requestAnimationFrame(function() { area.scrollTop = area.scrollHeight; });
   messageHistory.push({type:'user', name:name, text:text});
 }
 
@@ -2530,7 +2530,7 @@ function renderAIMessage(roleId, text, msgId) {
     + '<button onclick="submitFeedback(&apos;' + roleId + '&apos;,' + id + ',&apos;negative&apos;,this)" title="不太行">👎</button>'
     + '</div></div>';
   area.appendChild(msg);
-  area.scrollTop = area.scrollHeight;
+  requestAnimationFrame(function() { area.scrollTop = area.scrollHeight; });
   messageHistory.push({type:'ai', role:roleId, name:ROLES[roleId]?.name, text:text});
 }
 
@@ -2563,7 +2563,7 @@ function renderSystemMessage(text) {
   msg.className = 'msg system';
   msg.innerHTML = '<div class="msg-bubble">' + escapeHtml(text) + '</div>';
   area.appendChild(msg);
-  area.scrollTop = area.scrollHeight;
+  requestAnimationFrame(function() { area.scrollTop = area.scrollHeight; });
   messageHistory.push({type:'system', text:text});
 }
 
@@ -2623,7 +2623,7 @@ function renderFileMessage(m, isMe) {
   cardHtml += '</div>';
   msg.innerHTML = nameHtml + '<div class="msg-bubble file-msg">' + cardHtml + '</div>';
   area.appendChild(msg);
-  area.scrollTop = area.scrollHeight;
+  requestAnimationFrame(function() { area.scrollTop = area.scrollHeight; });
 }
 
 // 存储文件数据用于下载和分析
