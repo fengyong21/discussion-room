@@ -2800,7 +2800,7 @@ async function quickAtRole(roleId, roleName) {
   safeSetProcessing(true);
   showTyping(ROLES[roleId].name + ' 正在思考...');
   try {
-    await Promise.race([scheduleResponse(atText), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]);
+    await Promise.race([scheduleResponse(atText), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},60000)})]);
   } catch(e) {
     console.error(e);
   }
@@ -2963,7 +2963,7 @@ async function pollMessages() {
                 if (!isProcessing) {
                   safeSetProcessing(true);
                   showTyping(ROLES[m.role].name + ' 正在回复...');
-                  Promise.race([scheduleResponse(m.text), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},30000)})]).then(function() {
+                  Promise.race([scheduleResponse(m.text), new Promise(function(_,r){setTimeout(function(){r(new Error('超时'))},60000)})]).then(function() {
                     safeSetProcessing(false);
                     hideTyping();
                   }).catch(function() {
@@ -3118,7 +3118,7 @@ async function sendMessage() {
     showTyping('正在唤醒角色...');
     await Promise.race([
       scheduleResponse(text),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 30000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 60000))
     ]);
   } catch(e) {
     console.error(e);
