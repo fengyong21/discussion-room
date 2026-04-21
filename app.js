@@ -2701,6 +2701,7 @@ async function handleFileUpload(event) {
     // 获取刚上传的文件消息
     var pollResp = await fetchTimeout('/room/' + ROOM_ID + '/poll?after=' + (data.id - 1));
     var pollData = await pollResp.json();
+    var uploadedFile = null;
     if (pollData.messages) {
       for (var i = 0; i < pollData.messages.length; i++) {
         var m = pollData.messages[i];
@@ -2709,7 +2710,32 @@ async function handleFileUpload(event) {
           renderFileMessage(m, true);
           lastMsgId = Math.max(lastMsgId, m.id || 0);
           displayedMsgIds[m.id] = true;
+          uploadedFile = m;
         }
+      }
+    }
+
+    // 上传成功后自动触发 AI 回复
+    if (uploadedFile && !isProcessing) {
+      safeSetProcessing(true);
+      var fileHint = '用户上传了文件「' + (uploadedFile.fileName || '未知文件') + '」';
+      if (uploadedFile.textContent) {
+        fileHint += '，内容摘要：' + uploadedFile.textContent.substring(0, 200);
+      }
+      showTyping('正在分析文件...');
+      try {
+        await Promise.race([
+          scheduleResponse(fileHint),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 60000))
+        ]);
+      } catch(e) {
+        console.error('File AI error:', e);
+        showTyping('❌ 文件分析失败: ' + (e.message || '未知'));
+        await sleep(2000);
+        hideTyping();
+      } finally {
+        safeSetProcessing(false);
+        hideTyping();
       }
     }
   } catch(e) {
