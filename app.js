@@ -831,6 +831,40 @@ body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;backgr
 <script>
 var ROOM_ID = '${roomId}';
 var ROLES = ${JSON.stringify(ROLES)};
+// 注入服务端常量到浏览器端
+var PERSONALITIES = ${JSON.stringify(PERSONALITIES)};
+var CATCHPHRASES = ${JSON.stringify(CATCHPHRASES)};
+var SPEAK_STYLES = ${JSON.stringify(SPEAK_STYLES)};
+var KNOWLEDGE = ${JSON.stringify(KNOWLEDGE)};
+var EMOTION_TENDENCY = ${JSON.stringify(EMOTION_TENDENCY)};
+var SOCIAL_STYLE = ${JSON.stringify(SOCIAL_STYLE)};
+var SPEAK_RHYTHM = ${JSON.stringify(SPEAK_RHYTHM)};
+var OPENERS = ${JSON.stringify(OPENERS)};
+var NAME_POOL = ${JSON.stringify(NAME_POOL)};
+var BACKSTORIES = ${JSON.stringify(BACKSTORIES)};
+var MOOD_ARCHETYPES = ${JSON.stringify(MOOD_ARCHETYPES)};
+var VILLAIN_ARCHETYPES = ${JSON.stringify(VILLAIN_ARCHETYPES)};
+var INDUSTRIES = ${JSON.stringify(INDUSTRIES)};
+var NEW_IDEA_KEYWORDS = ${JSON.stringify(NEW_IDEA_KEYWORDS)};
+var FAKE_DEMAND_SIGNALS = ${JSON.stringify(FAKE_DEMAND_SIGNALS)};
+var TOPIC_KEYWORDS = ${JSON.stringify(TOPIC_KEYWORDS)};
+var TOPIC_ROLE_MAP = ${JSON.stringify(TOPIC_ROLE_MAP)};
+var FLOW_PHASES = ${JSON.stringify(FLOW_PHASES)};
+var myIndustry = 'general';
+var generatedRoleCount = 0;
+var currentRoomId = ROOM_ID;
+// 注入服务端函数到浏览器端
+${detectIndustry.toString()}
+${updateFlowRolesDisplay.toString()}
+${detectNewIdea.toString()}
+${detectFakeDemand.toString()}
+${updateUserProfile.toString()}
+${detectTopics.toString()}
+${detectDataType.toString()}
+${collectRequirementData.toString()}
+${shuffle.toString()}
+${selectSpeakers.toString()}
+${getActiveByCategory.toString()}
 var MY_COLOR = '#' + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0');
 var myName = '';
 var lastMsgId = 0;
