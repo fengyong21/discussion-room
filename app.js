@@ -2721,22 +2721,39 @@ async function handleFileUpload(event) {
       }
     }
 
-    // 上传成功后异步触发 AI 回复（不阻塞 UI）
-    if (uploadedFile) {
-      var fileHint = '用户上传了文件「' + (uploadedFile.fileName || '未知文件') + '」';
-      if (uploadedFile.textContent) {
-        fileHint += '，内容摘要：' + uploadedFile.textContent.substring(0, 200);
-      }
+    // 上传成功后直接让 AI 分析文件（不走 scheduleResponse，更快更直接）
+    if (uploadedFile && !isProcessing) {
+      safeSetProcessing(true);
       showTyping('正在分析文件...');
-      // 不锁 UI，后台异步处理
-      Promise.race([
-        scheduleResponse(fileHint),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('AI 响应超时')), 15000))
-      ]).then(function() {
+      var fileDesc = '用户上传了文件「' + (uploadedFile.fileName || '未知文件') + '」';
+      if (uploadedFile.textContent) {
+        fileDesc = '用户上传了文件「' + (uploadedFile.fileName) + '」，内容如下：\n' + uploadedFile.textContent.substring(0, 2000);
+      } else if (uploadedFile.isImage) {
+        fileDesc = '用户上传了一张图片「' + (uploadedFile.fileName) + '」，请根据文件名推测内容并给出看法。';
+      } else {
+        fileDesc = '用户上传了文件「' + (uploadedFile.fileName) + '」（' + uploadedFile.fileType + '），请给出你的看法。';
+      }
+      // 选一个合适的角色来分析
+      var analystRole = 'li';
+      if (flowEngine.mode === 'formal') {
+        var phaseInfo = flowEngine.getCurrentPhaseInfo();
+        if (phaseInfo && phaseInfo.role) analystRole = phaseInfo.role;
+      }
+      callAI(analystRole, fileDesc, '你是' + (ROLES[analystRole]?.name || 'AI助手') + '。用户刚上传了一个文件，请分析并回复你的看法。用中文，简洁有力。').then(function(response) {
         hideTyping();
+        if (response && response.trim()) {
+          sendToServer({ type: 'ai', role: analystRole, text: response }).then(function(msgId) {
+            renderAIMessage(analystRole, response, msgId);
+          });
+        } else {
+          renderSystemMessage('⚠️ AI 未返回有效内容');
+        }
+        safeSetProcessing(false);
       }).catch(function(e) {
         console.error('File AI error:', e);
         hideTyping();
+        renderSystemMessage('❌ 文件分析失败: ' + (e.message || '未知错误'));
+        safeSetProcessing(false);
       });
     }
   } catch(e) {
