@@ -2256,14 +2256,16 @@ async function scheduleResponse(userText) {
   if (flowEngine.mode === 'idle' && detectNewIdea(userText)) {
     flowEngine.enterFormal();
     modeChanged = true;
-    await sendToServer({ type: 'system', text: '💡 检测到新创意，重新启动孵化流程！' });
+    var sid = await sendToServer({ type: 'system', text: '💡 检测到新创意，重新启动孵化流程！' });
+    renderSystemMessage('💡 检测到新创意，重新启动孵化流程！');
   }
 
   // 2b. 正式模式下检测伪需求信号
   if (flowEngine.mode === 'formal' && !flowEngine.verified && flowEngine.phase === 'explore' && detectFakeDemand(userText)) {
     flowEngine.enterIdle('用户表现出伪需求特征：缺乏明确痛点和付费意愿');
     modeChanged = true;
-    await sendToServer({ type: 'ai', role: 'li', text: '老板，不急，这事儿慢慢想。咱们先聊点别的也行，说不定聊着聊着灵感就来了~' });
+    var sid2 = await sendToServer({ type: 'ai', role: 'li', text: '老板，不急，这事儿慢慢想。咱们先聊点别的也行，说不定聊着聊着灵感就来了~' });
+    renderAIMessage('li', '老板，不急，这事儿慢慢想。咱们先聊点别的也行，说不定聊着聊着灵感就来了~', sid2);
   }
 
   // 2c. 正式流程：记录轮数，检查阶段推进
@@ -2294,7 +2296,8 @@ async function scheduleResponse(userText) {
             };
             var hintKey = oldPhase.id + '_' + newPhase.id;
             var hint = transitionHints[hintKey] || ('老板，接下来进入' + newPhase.name + '。' + ROLES[newPhase.role].name + '你来。');
-            await sendToServer({ type: 'ai', role: 'li', text: hint });
+            var hid = await sendToServer({ type: 'ai', role: 'li', text: hint });
+            renderAIMessage('li', hint, hid);
           }
         }
       }
@@ -2309,6 +2312,7 @@ async function scheduleResponse(userText) {
     // 流程完成检测
     if (flowEngine.completed) {
       await sendToServer({ type: 'system', text: '🎉 孵化流程完成！可以生成需求文档了。' });
+      renderSystemMessage('🎉 孵化流程完成！可以生成需求文档了。');
     }
   }
 
@@ -2369,7 +2373,8 @@ async function scheduleResponse(userText) {
         await sleep(1000);
         continue;
       }
-      await sendToServer({ type: 'ai', role: speaker, text: response });
+      var msgId = await sendToServer({ type: 'ai', role: speaker, text: response });
+      renderAIMessage(speaker, response, msgId);
       collectRequirementData(response, topics, speaker);
       lastSpeakerIds.push(speaker); // 记录本轮发言角色
     } catch(e) {
@@ -2531,6 +2536,7 @@ function renderAIMessage(roleId, text, msgId) {
     + '</div></div>';
   area.appendChild(msg);
   requestAnimationFrame(function() { area.scrollTop = area.scrollHeight; });
+  if (id) displayedMsgIds[id] = true;
   messageHistory.push({type:'ai', role:roleId, name:ROLES[roleId]?.name, text:text});
 }
 
@@ -3146,7 +3152,8 @@ async function sendMessage() {
     var hint = e.message || '未知错误';
     if (hint.indexOf('Failed to fetch') >= 0 || hint.indexOf('NetworkError') >= 0) hint = '网络连接失败，请稍后重试。';
     showTyping('❌ ' + hint);
-    await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\\n\\n' + hint });
+    var errId = await sendToServer({ type: 'ai', role: 'li', text: '出了点问题 😅\\n\\n' + hint });
+    renderAIMessage('li', '出了点问题 😅\n\n' + hint, errId);
   } finally {
     safeSetProcessing(false);
     hideTyping();
@@ -3298,6 +3305,7 @@ async function doRename() {
   // 通知房间
   if (oldName && oldName !== name) {
     await sendToServer({ type: 'system', text: oldName + ' 改名为 ' + name });
+    renderSystemMessage(oldName + ' 改名为 ' + name);
   }
 }
 
@@ -3484,7 +3492,8 @@ async function init() {
       renderRolesBar();
       setTimeout(async function() {
         var welcome = '来啦！有什么想法尽管说，不用想好再说。\\n\\n哪怕只是一句"我想做个XX"或者"最近有个烦心事"，都能聊起来~';
-        await sendToServer({ type: 'ai', role: 'li', text: welcome });
+        var wid = await sendToServer({ type: 'ai', role: 'li', text: welcome });
+        renderAIMessage('li', welcome, wid);
       }, 300);
 
       if (myName) {
@@ -3504,7 +3513,8 @@ async function init() {
     renderRolesBar();
     setTimeout(async function() {
       var welcome = '来啦！有什么想法尽管说，不用想好再说。\\n\\n哪怕只是一句"我想做个XX"或者"最近有个烦心事"，都能聊起来~';
-      await sendToServer({ type: 'ai', role: 'li', text: welcome });
+      var wid2 = await sendToServer({ type: 'ai', role: 'li', text: welcome });
+      renderAIMessage('li', welcome, wid2);
     }, 300);
     showJoinDialog();
     startPolling();
