@@ -3674,8 +3674,11 @@ app.post('/room/:roomId/analyze', async (c) => {
       ? '请分析以下文件内容，用中文给出简洁的总结（包括要点、关键信息、建议）：\n\n文件名：' + fileName + '\n\n内容：\n' + textContent
       : '请分析文件 "' + fileName + '"，给出你的看法和建议。';
 
+    const controller2 = new AbortController();
+    const timeout2 = setTimeout(() => controller2.abort(), 55000);
     const response = await fetch(API_BASE + '/v1/chat/completions', {
       method: 'POST',
+      signal: controller2.signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + API_KEY,
@@ -3689,6 +3692,7 @@ app.post('/room/:roomId/analyze', async (c) => {
         max_tokens: 800,
       }),
     });
+    clearTimeout(timeout2);
 
     if (!response.ok) throw new Error('AI 请求失败: ' + response.status);
     const result = await response.json();
@@ -3725,8 +3729,11 @@ app.post('/api/chat', async (c) => {
       return c.json({ error: 'AI 未配置，请设置 API_KEY 环境变量' }, 500);
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55000);
     const response = await fetch(API_BASE + '/v1/chat/completions', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + API_KEY,
@@ -3740,6 +3747,7 @@ app.post('/api/chat', async (c) => {
         max_tokens: 2000,
       }),
     });
+    clearTimeout(timeout);
 
     const result = await response.json();
     let content = result.choices?.[0]?.message?.content || '';
