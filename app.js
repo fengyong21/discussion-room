@@ -2727,7 +2727,7 @@ async function handleFileUpload(event) {
       showTyping('正在分析文件...');
       var fileDesc = '用户上传了文件「' + (uploadedFile.fileName || '未知文件') + '」';
       if (uploadedFile.textContent) {
-        fileDesc = '用户上传了文件「' + (uploadedFile.fileName) + '」，内容如下：\n' + uploadedFile.textContent.substring(0, 2000);
+        fileDesc = '用户上传了文件「' + (uploadedFile.fileName) + '」，内容如下：\n' + uploadedFile.textContent;
       } else if (uploadedFile.isImage) {
         fileDesc = '用户上传了一张图片「' + (uploadedFile.fileName) + '」，请根据文件名推测内容并给出看法。';
       } else {
@@ -3658,7 +3658,7 @@ app.post('/room/:roomId/upload', async (c) => {
     // 提取文本内容用于 AI 分析
     if (isText) {
       textContent = new TextDecoder('utf-8').decode(new Uint8Array(buffer));
-      if (textContent.length > 10000) textContent = textContent.substring(0, 10000);
+      if (textContent.length > 50000) textContent = textContent.substring(0, 50000);
     } else if (isPdf) {
       textContent = '[PDF 文件，内容需要 AI 解析]';
     }
